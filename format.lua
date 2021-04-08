@@ -1639,7 +1639,7 @@ local FormatBeautiful = (function()
 					for i, v1 in ipairs(u.Arguments) do
 						v = v .. k(v1)
 						if i ~= al then
-							v = v .. ","
+							v = v .. ", "
 						end
 					end
 					v = v .. ")"
