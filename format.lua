@@ -1631,14 +1631,19 @@ local FormatBeautiful = (function()
 				v = v .. "..."
 			elseif u.AstType == "CallExpr" then
 				v = v .. k(u.Base)
-				v = v .. "("
-				for i, v1 in ipairs(u.Arguments) do
-					v = v .. k(v1)
-					if i ~= #u.Arguments then
-						v = v .. ", "
+				local al = #u.Arguments
+				if ripvon and al == 1 and (u.Arguments[1].AstType == "StringExpr" or u.Arguments[1].AstType == "ConstructorExpr") then
+					v = v .. k(u.Arguments[1])
+				else
+					v = v .. "("
+					for i, v1 in ipairs(u.Arguments) do
+						v = v .. k(v1)
+						if i ~= al then
+							v = v .. ","
+						end
 					end
+					v = v .. ")"
 				end
-				v = v .. ")"
 			elseif u.AstType == "TableCallExpr" then
 				if ripvon then
 					v = v .. k(u.Base) .. k(u.Arguments[1])
