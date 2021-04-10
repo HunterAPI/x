@@ -81,226 +81,226 @@ end)()
 local Scope = (function()
 	local a = {
 		new = function(self, b)
-		local c = {
-			Parent = b,
-			Locals = {},
-			Globals = {},
-			oldLocalNamesMap = {},
-			oldGlobalNamesMap = {},
-			Children = {}
-		}
-		if b then
-			table.insert(b.Children, c)
-		end
-		return setmetatable(c, {
-			__index = self
-		})
-	end,
+			local c = {
+				Parent = b,
+				Locals = {},
+				Globals = {},
+				oldLocalNamesMap = {},
+				oldGlobalNamesMap = {},
+				Children = {}
+			}
+			if b then
+				table.insert(b.Children, c)
+			end
+			return setmetatable(c, {
+				__index = self
+			})
+		end,
 		AddLocal = function(self, d)
-		table.insert(self.Locals, d)
-	end,
+			table.insert(self.Locals, d)
+		end,
 		AddGlobal = function(self, d)
-		table.insert(self.Globals, d)
-	end,
+			table.insert(self.Globals, d)
+		end,
 		CreateLocal = function(self, e)
-		local d
-		d = self:GetLocal(e)
-		if d then
-			return d
-		end
-		d = {}
-		d.Scope = self
-		d.Name = e
-		d.IsGlobal = false
-		d.CanRename = true
-		d.References = 1
-		self:AddLocal(d)
-		return d
-	end,
-		GetLocal = function(self, e)
-		for f, g in pairs(self.Locals) do
-			if g.Name == e then
-				return g
-			end
-		end
-		if self.Parent then
-			return self.Parent:GetLocal(e)
-		end
-	end,
-		GetOldLocal = function(self, e)
-		if self.oldLocalNamesMap[e] then
-			return self.oldLocalNamesMap[e]
-		end
-		return self:GetLocal(e)
-	end,
-		mapLocal = function(self, e, g)
-		self.oldLocalNamesMap[e] = g
-	end,
-		GetOldGlobal = function(self, e)
-		if self.oldGlobalNamesMap[e] then
-			return self.oldGlobalNamesMap[e]
-		end
-		return self:GetGlobal(e)
-	end,
-		mapGlobal = function(self, e, g)
-		self.oldGlobalNamesMap[e] = g
-	end,
-		GetOldVariable = function(self, e)
-		return self:GetOldLocal(e) or self:GetOldGlobal(e)
-	end,
-		RenameLocal = function(self, h, i)
-		h = type(h) == "string" and h or h.Name
-		local j = false
-		local g = self:GetLocal(h)
-		if g then
-			g.Name = i
-			self:mapLocal(h, g)
-			j = true
-		end
-		if not j and self.Parent then
-			self.Parent:RenameLocal(h, i)
-		end
-	end,
-		RenameGlobal = function(self, h, i)
-		h = type(h) == "string" and h or h.Name
-		local j = false
-		local g = self:GetGlobal(h)
-		if g then
-			g.Name = i
-			self:mapGlobal(h, g)
-			j = true
-		end
-		if not j and self.Parent then
-			self.Parent:RenameGlobal(h, i)
-		end
-	end,
-		RenameVariable = function(self, h, i)
-		h = type(h) == "string" and h or h.Name
-		if self:GetLocal(h) then
-			self:RenameLocal(h, i)
-		else
-			self:RenameGlobal(h, i)
-		end
-	end,
-		GetAllVariables = function(self)
-		local k = self:getVars(true)
-		for f, d in pairs(self:getVars(false)) do
-			table.insert(k, d)
-		end
-		return k
-	end,
-		getVars = function(self, l)
-		local k = {}
-		if l then
-			for f, d in pairs(self.Children) do
-				for m, n in pairs(d:getVars(true)) do
-					table.insert(k, n)
-				end
-			end
-		else
-			for f, d in pairs(self.Locals) do
-				table.insert(k, d)
-			end
-			for f, d in pairs(self.Globals) do
-				table.insert(k, d)
-			end
-			if self.Parent then
-				for f, d in pairs(self.Parent:getVars(false)) do
-					table.insert(k, d)
-				end
-			end
-		end
-		return k
-	end,
-		CreateGlobal = function(self, e)
-		local d
-		d = self:GetGlobal(e)
-		if d then
-			return d
-		end
-		d = {}
-		d.Scope = self
-		d.Name = e
-		d.IsGlobal = true
-		d.CanRename = true
-		d.References = 1
-		self:AddGlobal(d)
-		return d
-	end,
-		GetGlobal = function(self, e)
-		for f, d in pairs(self.Globals) do
-			if d.Name == e then
+			local d
+			d = self:GetLocal(e)
+			if d then
 				return d
 			end
-		end
-		if self.Parent then
-			return self.Parent:GetGlobal(e)
-		end
-	end,
+			d = {}
+			d.Scope = self
+			d.Name = e
+			d.IsGlobal = false
+			d.CanRename = true
+			d.References = 1
+			self:AddLocal(d)
+			return d
+		end,
+		GetLocal = function(self, e)
+			for f, g in pairs(self.Locals) do
+				if g.Name == e then
+					return g
+				end
+			end
+			if self.Parent then
+				return self.Parent:GetLocal(e)
+			end
+		end,
+		GetOldLocal = function(self, e)
+			if self.oldLocalNamesMap[e] then
+				return self.oldLocalNamesMap[e]
+			end
+			return self:GetLocal(e)
+		end,
+		mapLocal = function(self, e, g)
+			self.oldLocalNamesMap[e] = g
+		end,
+		GetOldGlobal = function(self, e)
+			if self.oldGlobalNamesMap[e] then
+				return self.oldGlobalNamesMap[e]
+			end
+			return self:GetGlobal(e)
+		end,
+		mapGlobal = function(self, e, g)
+			self.oldGlobalNamesMap[e] = g
+		end,
+		GetOldVariable = function(self, e)
+			return self:GetOldLocal(e) or self:GetOldGlobal(e)
+		end,
+		RenameLocal = function(self, h, i)
+			h = type(h) == "string" and h or h.Name
+			local j = false
+			local g = self:GetLocal(h)
+			if g then
+				g.Name = i
+				self:mapLocal(h, g)
+				j = true
+			end
+			if not j and self.Parent then
+				self.Parent:RenameLocal(h, i)
+			end
+		end,
+		RenameGlobal = function(self, h, i)
+			h = type(h) == "string" and h or h.Name
+			local j = false
+			local g = self:GetGlobal(h)
+			if g then
+				g.Name = i
+				self:mapGlobal(h, g)
+				j = true
+			end
+			if not j and self.Parent then
+				self.Parent:RenameGlobal(h, i)
+			end
+		end,
+		RenameVariable = function(self, h, i)
+			h = type(h) == "string" and h or h.Name
+			if self:GetLocal(h) then
+				self:RenameLocal(h, i)
+			else
+				self:RenameGlobal(h, i)
+			end
+		end,
+		GetAllVariables = function(self)
+			local k = self:getVars(true)
+			for f, d in pairs(self:getVars(false)) do
+				table.insert(k, d)
+			end
+			return k
+		end,
+		getVars = function(self, l)
+			local k = {}
+			if l then
+				for f, d in pairs(self.Children) do
+					for m, n in pairs(d:getVars(true)) do
+						table.insert(k, n)
+					end
+				end
+			else
+				for f, d in pairs(self.Locals) do
+					table.insert(k, d)
+				end
+				for f, d in pairs(self.Globals) do
+					table.insert(k, d)
+				end
+				if self.Parent then
+					for f, d in pairs(self.Parent:getVars(false)) do
+						table.insert(k, d)
+					end
+				end
+			end
+			return k
+		end,
+		CreateGlobal = function(self, e)
+			local d
+			d = self:GetGlobal(e)
+			if d then
+				return d
+			end
+			d = {}
+			d.Scope = self
+			d.Name = e
+			d.IsGlobal = true
+			d.CanRename = true
+			d.References = 1
+			self:AddGlobal(d)
+			return d
+		end,
+		GetGlobal = function(self, e)
+			for f, d in pairs(self.Globals) do
+				if d.Name == e then
+					return d
+				end
+			end
+			if self.Parent then
+				return self.Parent:GetGlobal(e)
+			end
+		end,
 		GetVariable = function(self, e)
-		return self:GetLocal(e) or self:GetGlobal(e)
-	end,
+			return self:GetLocal(e) or self:GetGlobal(e)
+		end,
 		ObfuscateLocals = function(self, o, p)
-		o = o or 7
-		local q = p or "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuioplkjhgfdsazxcvbnm_"
-		local r = p or "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuioplkjhgfdsazxcvbnm_1234567890"
-		for s, g in pairs(self.Locals) do
-			local t = ""
-			local u = 0
-			repeat
-				local v = math.random(1, #q)
-				t = t .. q:sub(v, v)
-				for w = 1, math.random(0, u > 5 and 30 or o) do
-					local v = math.random(1, #r)
-					t = t .. r:sub(v, v)
-				end
-				u = u + 1
-			until not self:GetVariable(t)
-			self:RenameLocal(g.Name, t)
-		end
-	end,
+			o = o or 7
+			local q = p or "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuioplkjhgfdsazxcvbnm_"
+			local r = p or "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuioplkjhgfdsazxcvbnm_1234567890"
+			for s, g in pairs(self.Locals) do
+				local t = ""
+				local u = 0
+				repeat
+					local v = math.random(1, #q)
+					t = t .. q:sub(v, v)
+					for w = 1, math.random(0, u > 5 and 30 or o) do
+						local v = math.random(1, #r)
+						t = t .. r:sub(v, v)
+					end
+					u = u + 1
+				until not self:GetVariable(t)
+				self:RenameLocal(g.Name, t)
+			end
+		end,
 		BeautifyVariables_ = function(x, y, z)
-		local A = {}
-		for s, g in pairs(x) do
-			if not g.AssignedTo or not z then
-				A[g.Name] = true
-			end
-		end
-		local B = 1
-		local C = 1
-		local function D(g, e)
-			g.Name = e
-			for s, E in pairs(g.RenameList) do
-				E(e)
-			end
-		end
-		local function F(G)
-			for s, g in pairs(G.VariableList) do
-				local e = "L" .. B
-				if g.Info.Type == "Argument" then
-					e = e .. "arg" .. g.Info.Index
-				elseif g.Info.Type == "LocalFunction" then
-					e = e .. "func"
-				elseif g.Info.Type == "ForRange" then
-					e = e .. "forvar" .. g.Info.Index
+			local A = {}
+			for s, g in pairs(x) do
+				if not g.AssignedTo or not z then
+					A[g.Name] = true
 				end
-				D(g, e)
+			end
+			local B = 1
+			local C = 1
+			local function D(g, e)
+				g.Name = e
+				for s, E in pairs(g.RenameList) do
+					E(e)
+				end
+			end
+			local function F(G)
+				for s, g in pairs(G.VariableList) do
+					local e = "L" .. B
+					if g.Info.Type == "Argument" then
+						e = e .. "arg" .. g.Info.Index
+					elseif g.Info.Type == "LocalFunction" then
+						e = e .. "func"
+					elseif g.Info.Type == "ForRange" then
+						e = e .. "forvar" .. g.Info.Index
+					end
+					D(g, e)
+					B = B + 1
+				end
+				for s, G in pairs(G.ChildScopeList) do
+					F(G)
+				end
+			end
+			F(y)
+		end,
+		BeautifyVariables = function(self)
+			local B = 1
+			for s, g in pairs(self.Locals) do
+				local e = "L" .. B
+				self:RenameLocal(g, e)
 				B = B + 1
 			end
-			for s, G in pairs(G.ChildScopeList) do
-				F(G)
-			end
 		end
-		F(y)
-	end,
-		BeautifyVariables = function(self)
-		local B = 1
-		for s, g in pairs(self.Locals) do
-			local e = "L" .. B
-			self:RenameLocal(g, e)
-			B = B + 1
-		end
-	end
 	}
 	return a
 end)()
@@ -1952,17 +1952,17 @@ end
 local function _minify(scr, encrypt)
 	local ret = _beautify(scr, true, true):gsub("%s+", " "):gsub("([%w_])%s+(%p)", function(a, b)
 		if b == "_" then
-			return
+			return 
 		end
 		return a .. b
 	end):gsub("(%p)%s+([%w_])", function(a, b)
 		if a == "_" then
-			return
+			return 
 		end
 		return a .. b
 	end):gsub("(%p)%s+(%p)", function(a, b)
 		if a == "_" or b == "_" then
-			return
+			return 
 		end
 		return a .. b
 	end)
@@ -1971,4 +1971,7 @@ local function _minify(scr, encrypt)
 	end
 	return ret
 end
-return {beautify = _beautify, minify = _minify}
+return {
+	beautify = _beautify,
+	minify = _minify
+}
