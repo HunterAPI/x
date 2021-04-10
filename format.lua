@@ -1683,11 +1683,19 @@ local FormatBeautiful = (function()
 				v = o(v, ("\t"):rep(l) .. "end")
 			elseif u.AstType == "ConstructorExpr" then
 				v = v .. "{"
+				local itsanarray = (function()
+					for _, v in ipairs(u.EntryList) do
+						if v.Type == "Key" or v.Type == "KeyString" then
+							return false
+						end
+					end
+					return true
+				end)()
 				local x, y, z = false, false, false
 				for w = 1, #u.EntryList do
 					local A = u.EntryList[w]
 					x, y = A.Type == "Key" or A.Type == "KeyString", x
-					l = l + 1
+					l = l + (itsanarray and 0 or 1)
 					if x or z then
 						z = x
 						if not y then
@@ -1707,12 +1715,11 @@ local FormatBeautiful = (function()
 						if not x then
 							v = v .. " "
 						end
-					elseif w == #u.EntryList and x then
 					end
 					if x then
 						v = v .. "\n"
 					end
-					l = l - 1
+					l = l - (itsanarray and 0 or 1)
 				end
 				if #u.EntryList > 0 and x then
 					v = v .. ("\t"):rep(l)
