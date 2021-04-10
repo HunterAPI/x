@@ -1696,17 +1696,11 @@ local FormatBeautiful = (function()
 						v = v .. ("\t"):rep(l)
 					end
 					if A.Type == "Key" then
-						l = l - 1
 						v = v .. "[" .. k(A.Key) .. "] = " .. k(A.Value)
-						l = l + 1
 					elseif A.Type == "Value" then
-						l = l - 1
 						v = v .. k(A.Value)
-						l = l + 1
 					elseif A.Type == "KeyString" then
-						l = l - 1
 						v = v .. A.Key .. " = " .. k(A.Value)
-						l = l + 1
 					end
 					if w ~= #u.EntryList then
 						v = v .. ","
@@ -1950,14 +1944,6 @@ local function _beautify(scr, encrypt, x)
 		return scr
 	end
 	local ret = FormatBeautiful(ast, false, not not x)
-	for i, v in pairs({
-		["do%s+return%s+end"] = "do return end",
-		["do%s+end"] = "do end",
-		["do%s+continue%s+end"] = "do continue end",
-		["do%s+break%s+end"] = "do break end",
-	}) do
-		ret = ret:gsub(i, v)
-	end
 	if not encrypt then
 		ret = decrypt(ret)
 	end
