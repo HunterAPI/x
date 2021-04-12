@@ -319,7 +319,6 @@ local ParseLua = (function()
 	local f = a({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
 	local g = a({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "a", "B", "b", "C", "c", "D", "d", "E", "e", "F", "f"})
 	local h = a({"+", "-", "*", "/", "^", "%", ",", "{", "}", "[", "]", "(", ")", ";", "#"})
-	local i = Scope
 	local j = a({"and", "break", "continue", "do", "else", "elseif", "end", "false", "for", "function", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"})
 	local function k(l)
 		local m = {}
@@ -808,7 +807,7 @@ local ParseLua = (function()
 		local ac = 0
 		local ad = {"_", "a", "b", "c", "d"}
 		local function ae(af)
-			local ag = i:new(af)
+			local ag = Scope:new(af)
 			ag.RenameVars = ag.ObfuscateLocals
 			ag.ObfuscateVariables = ag.ObfuscateLocals
 			ag.BeautifyVars = ag.BeautifyVariables
@@ -1631,14 +1630,13 @@ local FormatBeautiful = (function()
 				v = v .. "..."
 			elseif u.AstType == "CallExpr" then
 				v = v .. k(u.Base)
-				local al = #u.Arguments
-				if ripvon and al == 1 and (u.Arguments[1].AstType == "StringExpr" or u.Arguments[1].AstType == "ConstructorExpr") then
+				if ripvon and #u.Arguments == 1 and (u.Arguments[1].AstType == "StringExpr" or u.Arguments[1].AstType == "ConstructorExpr") then
 					v = v .. k(u.Arguments[1])
 				else
 					v = v .. "("
-					for i, v1 in ipairs(u.Arguments) do
+					for i1, v1 in ipairs(u.Arguments) do
 						v = v .. k(v1)
-						if i ~= al then
+						if i1 ~= #u.Arguments then
 							v = v .. ", "
 						end
 					end
@@ -1665,14 +1663,14 @@ local FormatBeautiful = (function()
 			elseif u.AstType == "Function" then
 				v = v .. "function("
 				if #u.Arguments > 0 then
-					for w = 1, #u.Arguments do
-						v = v .. u.Arguments[w].Name
-						if w ~= #u.Arguments then
-							v = v .. ", "
-						elseif u.VarArg then
-							v = v .. ", ..."
-						end
+				for i1, v1 in ipairs(u.Arguments) do
+					v = v .. v1.Name
+					if i1 ~= #u.Arguments then
+						v = v .. ", "
+					elseif u.VarArg then
+						v = v .. ", ..."
 					end
+				end
 				elseif u.VarArg then
 					v = v .. "..."
 				end
@@ -1684,17 +1682,16 @@ local FormatBeautiful = (function()
 			elseif u.AstType == "ConstructorExpr" then
 				v = v .. "{"
 				local itsanarray = (function()
-					for _, v in ipairs(u.EntryList) do
-						if v.Type == "Key" or v.Type == "KeyString" then
+					for _, v1 in ipairs(u.EntryList) do
+						if v1.Type == "Key" or v1.Type == "KeyString" then
 							return false
 						end
 					end
 					return true
 				end)()
 				local x, y, z = false, false, false
-				for w = 1, #u.EntryList do
-					local A = u.EntryList[w]
-					x, y = A.Type == "Key" or A.Type == "KeyString", x
+				for i1, v1 in ipairs(u.EntryList) do
+					x, y = v1.Type == "Key" or v1.Type == "KeyString", x
 					l = l + (itsanarray and 0 or 1)
 					if x or z then
 						z = x
@@ -1703,14 +1700,14 @@ local FormatBeautiful = (function()
 						end
 						v = v .. ("\t"):rep(l)
 					end
-					if A.Type == "Key" then
-						v = v .. "[" .. k(A.Key) .. "] = " .. k(A.Value)
-					elseif A.Type == "Value" then
-						v = v .. k(A.Value)
-					elseif A.Type == "KeyString" then
-						v = v .. A.Key .. " = " .. k(A.Value)
+					if v1.Type == "Key" then
+						v = v .. "[" .. k(v1.Key) .. "] = " .. k(v1.Value)
+					elseif v1.Type == "Value" then
+						v = v .. k(v1.Value)
+					elseif v1.Type == "KeyString" then
+						v = v .. v1.Key .. " = " .. k(v1.Value)
 					end
-					if w ~= #u.EntryList then
+					if i1 ~= #u.EntryList then
 						v = v .. ","
 						if not x then
 							v = v .. " "
