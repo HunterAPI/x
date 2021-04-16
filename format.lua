@@ -1567,7 +1567,7 @@ local function fixstr(a)
 		return "\\" .. x:byte()
 	end)) .. "\""
 end
-local FormatBeautiful = (function()
+local Format = (function()
 	local a = ParseLua.ParseLua
 	local b = Util.lookupify
 	local d = b({"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"})
@@ -1941,20 +1941,25 @@ local function decrypt(ret)
 		end) .. "\""
 	end))
 end
-local function _beautify(scr, encrypt, x)
+local function _beautify(scr, encrypt)
 	local st, ast = ParseLua.ParseLua(scr)
 	if not st then
 		print(ast)
 		return scr
 	end
-	local ret = FormatBeautiful(ast, false, not not x)
+	local ret = Format(ast, false, false)
 	if not encrypt then
 		ret = decrypt(ret)
 	end
 	return ret:match("^%s*(.-)%s*$")
 end
 local function _minify(scr, encrypt)
-	local ret = _beautify(scr, true, true):gsub("%s+", " "):gsub("([%w_])%s+(%p)", function(a, b)
+	local st, ast = ParseLua.ParseLua(scr)
+	if not st then
+		print(ast)
+		return scr
+	end
+	local ret = Format(ast, false, true):gsub("%s+", " "):gsub("([%w_])%s+(%p)", function(a, b)
 		if b == "_" then
 			return 
 		end
@@ -1973,7 +1978,7 @@ local function _minify(scr, encrypt)
 	if not encrypt then
 		ret = decrypt(ret)
 	end
-	return ret
+	return ret:match("^%s*(.-)%s*$")
 end
 return {
 	beautify = _beautify,
