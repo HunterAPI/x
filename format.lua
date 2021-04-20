@@ -78,6 +78,7 @@ local Util = (function()
 		printf = q
 	}
 end)()
+local localCount = 0
 local Scope = (function()
 	local a = {
 		new = function(self, b)
@@ -242,63 +243,29 @@ local Scope = (function()
 		end,
 		ObfuscateLocals = function(self, o, p)
 			o = o or 7
-			local q = p or "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuioplkjhgfdsazxcvbnm_"
-			local r = p or "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuioplkjhgfdsazxcvbnm_1234567890"
+			local r = p or "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuioplkjhgfdsazxcvbnm1234567890"
 			for s, g in pairs(self.Locals) do
 				local t = ""
 				local u = 0
 				repeat
-					local v = math.random(1, #q)
-					t = t .. q:sub(v, v)
+					local v = math.random(1, #r)
+					t = t .. r:sub(v, v)
 					for w = 1, math.random(0, u > 5 and 30 or o) do
 						local v = math.random(1, #r)
 						t = t .. r:sub(v, v)
 					end
 					u = u + 1
 				until not self:GetVariable(t)
+				t = ("."):rep(math.random(20, 50)):gsub(".", function()
+					return ({"l", "I"})[math.random(1, 2)]
+				end) .. "_" .. t
 				self:RenameLocal(g.Name, t)
 			end
 		end,
-		BeautifyVariables_ = function(x, y, z)
-			local A = {}
-			for s, g in pairs(x) do
-				if not g.AssignedTo or not z then
-					A[g.Name] = true
-				end
-			end
-			local B = 1
-			local C = 1
-			local function D(g, e)
-				g.Name = e
-				for s, E in pairs(g.RenameList) do
-					E(e)
-				end
-			end
-			local function F(G)
-				for s, g in pairs(G.VariableList) do
-					local e = "L" .. B
-					if g.Info.Type == "Argument" then
-						e = e .. "arg" .. g.Info.Index
-					elseif g.Info.Type == "LocalFunction" then
-						e = e .. "func"
-					elseif g.Info.Type == "ForRange" then
-						e = e .. "forvar" .. g.Info.Index
-					end
-					D(g, e)
-					B = B + 1
-				end
-				for s, G in pairs(G.ChildScopeList) do
-					F(G)
-				end
-			end
-			F(y)
-		end,
-		BeautifyVariables = function(self)
-			local B = 1
-			for s, g in pairs(self.Locals) do
-				local e = "L" .. B
-				self:RenameLocal(g, e)
-				B = B + 1
+		BeautifyVariables = function(self, x)
+			for _, v in ipairs(self.Locals) do
+				self:RenameLocal(v, "L" .. localCount)
+				localCount = localCount + 1
 			end
 		end
 	}
@@ -1603,7 +1570,23 @@ local Format = (function()
 				end
 			end
 		end
+		local Cases = {
+			Function = "ARG_",
+			NumericForStatement = "FOR_",
+			GenericForStatement = "FOR_",
+			Statlist = ""
+		}
+		local cache = {}
+		local function Rename(v, x)
+			if i and not cache[v] then
+				cache[v] = true
+				v.Scope:BeautifyVars(Cases[v.AstType] or "")
+			end
+		end
 		k = function(u)
+			if i and u.Scope then
+				Rename(u)
+			end
 			local v = ("("):rep(u.ParenCount or 0)
 			if u.AstType == "VarExpr" then
 				if u.Variable then
@@ -1729,6 +1712,9 @@ local Format = (function()
 			return v
 		end
 		local B = function(C)
+			if i and C.Scope then
+				Rename(C)
+			end
 			local v = ""
 			if C.AstType == "AssignmentStatement" then
 				v = ("\t"):rep(l)
@@ -1898,14 +1884,13 @@ local Format = (function()
 		end
 		j = function(E)
 			local v = ""
+			Rename(E)
 			for F, G in pairs(E.Body) do
 				v = o(v, B(G) .. m)
 			end
 			return v
 		end
-		if i then
-			h.Scope:BeautifyVars()
-		end
+		Rename(h)
 		return (Util.stripstr(j(h)))
 	end
 	return g
@@ -1954,12 +1939,13 @@ local function _beautify(scr, encrypt)
 	return ret:match("^%s*(.-)%s*$")
 end
 local function _minify(scr, encrypt)
+	localCount = 0
 	local st, ast = ParseLua.ParseLua(scr)
 	if not st then
 		print(ast)
 		return scr
 	end
-	local ret = Format(ast, false, true):gsub("%s+", " "):gsub("([%w_])%s+(%p)", function(a, b)
+	local ret = Format(ast, true, true):gsub("%s+", " "):gsub("([%w_])%s+(%p)", function(a, b)
 		if b == "_" then
 			return 
 		end
