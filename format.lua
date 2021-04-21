@@ -79,6 +79,54 @@ local Util = (function()
 	}
 end)()
 local localCount = 0
+local getNewLocal = (function()
+	local function L0(L7)
+		for _, L8 in pairs(L7) do
+			L7[L8] = true
+		end
+		return L7
+	end
+	local L1 = L0({"and", "break", "do", "else", "elseif", "end", "false", "for", "function", "goto", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"})
+	local L3 = {}
+	for i = ("a"):byte(), ("z"):byte() do
+		L3[#L3 + 1] = string.char(i)
+	end
+	for i = ("A"):byte(), ("Z"):byte() do
+		L3[#L3 + 1] = string.char(i)
+	end
+	for i = ("0"):byte(), ("9"):byte() do
+		L3[#L3 + 1] = string.char(i)
+	end
+	L3[#L3 + 1] = "_"
+	local L4 = {}
+	for i = ("a"):byte(), ("z"):byte() do
+		L4[#L4 + 1] = string.char(i)
+	end
+	for i = ("A"):byte(), ("Z"):byte() do
+		L4[#L4 + 1] = string.char(i)
+	end
+	local function L5(L15)
+		local L16 = ""
+		local L17 = L15 % #L4
+		L15 = (L15 - L17) / #L4
+		L16 = L16 .. L4[L17 + 1]
+		while L15 > 0 do
+			local L17 = L15 % #L3
+			L15 = (L15 - L17) / #L3
+			L16 = L16 .. L3[L17 + 1]
+		end
+		return L16
+	end
+	return function()
+		local L19 = ""
+		repeat
+			local L18 = localCount
+			localCount = localCount + 1
+			L19 = L5(L18)
+		until not L1[L19]
+		return L19
+	end
+end)()
 local Scope = (function()
 	local a = {
 		new = function(self, b)
@@ -264,8 +312,7 @@ local Scope = (function()
 		end,
 		BeautifyVariables = function(self, x)
 			for _, v in ipairs(self.Locals) do
-				self:RenameLocal(v, "L" .. localCount)
-				localCount = localCount + 1
+				self:RenameLocal(v, getNewLocal())
 			end
 		end
 	}
@@ -1926,13 +1973,13 @@ local function decrypt(ret)
 		end) .. "\""
 	end))
 end
-local function _beautify(scr, encrypt)
+local function _beautify(scr, encrypt, renamevars)
 	local st, ast = ParseLua.ParseLua(scr)
 	if not st then
 		print(ast)
 		return scr
 	end
-	local ret = Format(ast, false, false)
+	local ret = Format(ast, not not renamevars, false)
 	if not encrypt then
 		ret = decrypt(ret)
 	end
@@ -1945,22 +1992,22 @@ local function _minify(scr, encrypt)
 		print(ast)
 		return scr
 	end
-	local ret = Format(ast, true, true):gsub("%s+", " "):gsub("([%w_])%s+(%p)", function(a, b)
-		if b == "_" then
-			return 
-		end
-		return a .. b
-	end):gsub("(%p)%s+([%w_])", function(a, b)
-		if a == "_" then
-			return 
-		end
-		return a .. b
-	end):gsub("(%p)%s+(%p)", function(a, b)
-		if a == "_" or b == "_" then
-			return 
-		end
-		return a .. b
-	end)
+	local ret = Format(ast, true, true)
+	for _ = 1, 2 do
+		ret = ret:gsub("%s+", " "):gsub("([%w_]) (%p)", function(a, b)
+			if b ~= "_" then
+				return a .. b
+			end
+		end):gsub("(%p) (%p)", function(a, b)
+			if a ~= "_" and b ~= "_" then
+				return a .. b
+			end
+		end):gsub("(%p) ([%w_])", function(a, b)
+			if a ~= "_" then
+				return a .. b
+			end
+		end)
+	end
 	if not encrypt then
 		ret = decrypt(ret)
 	end
