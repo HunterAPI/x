@@ -1,1569 +1,1456 @@
-local Util = (function()
-	local function a(b)
-		for c, d in pairs(b) do
-			b[d] = true
-		end
-		return b
+local function toDictionary(t)
+	for _, v in ipairs(t) do
+		t[v] = true
 	end
-	local function e(b)
-		local f = 0
-		for c in pairs(b) do
-			f = f + 1
-		end
-		return f
-	end
-	local function g(b, h)
-		if b.Print then
-			return b.Print()
-		end
-		h = h or 0
-		local i = e(b) > 1
-		local j = ("\t"):rep(h + 1)
-		local k = "{" .. (i and "\n" or "")
-		for l, d in pairs(b) do
-			if type(d) ~= "function" then
-				k = k .. (i and j or "")
-				if type(l) == "number" then
-				elseif type(l) == "string" and l:match("^[%a_][%w_]*$") then
-					k = k .. l .. " = "
-				elseif type(l) == "string" then
-					k = k .. "[\"" .. l .. "\"] = "
-				else
-					k = k .. "[" .. tostring(l) .. "] = "
-				end
-				if type(d) == "string" then
-					k = k .. "\"" .. d .. "\""
-				elseif type(d) == "number" then
-					k = k .. d
-				elseif type(d) == "table" then
-					k = k .. g(d, h + (i and 1 or 0))
-				else
-					k = k .. tostring(d)
-				end
-				if next(b, l) then
-					k = k .. ","
-				end
-				if i then
-					k = k .. "\n"
-				end
-			end
-		end
-		k = k .. (i and ("\t"):rep(h) or "") .. "}"
-		return k
-	end
-	local function m(n)
-		if n:match("\n") then
-			local o = {}
-			for p in n:gmatch("[^\n]*") do
-				table.insert(o, p)
-			end
-			assert(#o > 0)
-			return o
-		else
-			return {n}
-		end
-	end
-	local function q(r, ...)
-		return print(r:format(...))
-	end
-	local function s(n)
-		return n:match("^%s*(.-)%s*$"):gsub(",%.%.%.", ", ..."):gsub(", \n", ",\n")
-	end
-	return {
-		stripstr = s,
-		PrintTable = g,
-		CountTable = e,
-		lookupify = a,
-		splitLines = m,
-		printf = q
-	}
-end)()
+	return t
+end
 local localCount = 0
+local LettersL = toDictionary({"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"})
+local LettersU = toDictionary({"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"})
+local Numbers = toDictionary({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
+local NumbersH = toDictionary({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "a", "B", "b", "C", "c", "D", "d", "E", "e", "F", "f"})
+local Operators = toDictionary({"+", "-", "*", "/", "^", "%", ",", "{", "}", "[", "]", "(", ")", ";", "#"})
+local Keywords = toDictionary({"and", "break", "continue", "do", "else", "elseif", "end", "false", "for", "function", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"})
 local getNewLocal = (function()
-	local function L0(L7)
-		for _, L8 in pairs(L7) do
-			L7[L8] = true
+	local a = {}
+	for d = ("a"):byte(), ("z"):byte() do
+		a[#a + 1] = string.char(d)
+	end
+	for e = ("A"):byte(), ("Z"):byte() do
+		a[#a + 1] = string.char(e)
+	end
+	for f = ("0"):byte(), ("9"):byte() do
+		a[#a + 1] = string.char(f)
+	end
+	a[#a + 1] = "_"
+	local b = {}
+	for g = ("a"):byte(), ("z"):byte() do
+		b[#b + 1] = string.char(g)
+	end
+	for h = ("A"):byte(), ("Z"):byte() do
+		b[#b + 1] = string.char(h)
+	end
+	local function c(i)
+		local j = ""
+		local k = i % #b
+		i = (i - k) / #b
+		j = j .. b[k + 1]
+		while i > 0 do
+			local k = i % #a
+			i = (i - k) / #a
+			j = j .. a[k + 1]
 		end
-		return L7
-	end
-	local L1 = L0({"and", "break", "do", "else", "elseif", "end", "false", "for", "function", "goto", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"})
-	local L3 = {}
-	for i = ("a"):byte(), ("z"):byte() do
-		L3[#L3 + 1] = string.char(i)
-	end
-	for i = ("A"):byte(), ("Z"):byte() do
-		L3[#L3 + 1] = string.char(i)
-	end
-	for i = ("0"):byte(), ("9"):byte() do
-		L3[#L3 + 1] = string.char(i)
-	end
-	L3[#L3 + 1] = "_"
-	local L4 = {}
-	for i = ("a"):byte(), ("z"):byte() do
-		L4[#L4 + 1] = string.char(i)
-	end
-	for i = ("A"):byte(), ("Z"):byte() do
-		L4[#L4 + 1] = string.char(i)
-	end
-	local function L5(L15)
-		local L16 = ""
-		local L17 = L15 % #L4
-		L15 = (L15 - L17) / #L4
-		L16 = L16 .. L4[L17 + 1]
-		while L15 > 0 do
-			local L17 = L15 % #L3
-			L15 = (L15 - L17) / #L3
-			L16 = L16 .. L3[L17 + 1]
-		end
-		return L16
+		return j
 	end
 	return function()
-		local L19 = ""
+		local l = ""
 		repeat
-			local L18 = localCount
+			local m = localCount
 			localCount = localCount + 1
-			L19 = L5(L18)
-		until not L1[L19]
-		return L19
+			l = c(m)
+		until not Keywords[l]
+		return l
 	end
 end)()
-local Scope = (function()
-	local a = {
-		new = function(self, b)
-			local c = {
-				Parent = b,
-				Locals = {},
-				Globals = {},
-				oldLocalNamesMap = {},
-				oldGlobalNamesMap = {},
-				Children = {}
-			}
-			if b then
-				table.insert(b.Children, c)
-			end
-			return setmetatable(c, {
-				__index = self
-			})
-		end,
-		AddLocal = function(self, d)
-			table.insert(self.Locals, d)
-		end,
-		AddGlobal = function(self, d)
-			table.insert(self.Globals, d)
-		end,
-		CreateLocal = function(self, e)
-			local d
-			d = self:GetLocal(e)
-			if d then
-				return d
-			end
-			d = {}
-			d.Scope = self
-			d.Name = e
-			d.IsGlobal = false
-			d.CanRename = true
-			d.References = 1
-			self:AddLocal(d)
-			return d
-		end,
-		GetLocal = function(self, e)
-			for f, g in pairs(self.Locals) do
-				if g.Name == e then
-					return g
-				end
-			end
-			if self.Parent then
-				return self.Parent:GetLocal(e)
-			end
-		end,
-		GetOldLocal = function(self, e)
-			if self.oldLocalNamesMap[e] then
-				return self.oldLocalNamesMap[e]
-			end
-			return self:GetLocal(e)
-		end,
-		mapLocal = function(self, e, g)
-			self.oldLocalNamesMap[e] = g
-		end,
-		GetOldGlobal = function(self, e)
-			if self.oldGlobalNamesMap[e] then
-				return self.oldGlobalNamesMap[e]
-			end
-			return self:GetGlobal(e)
-		end,
-		mapGlobal = function(self, e, g)
-			self.oldGlobalNamesMap[e] = g
-		end,
-		GetOldVariable = function(self, e)
-			return self:GetOldLocal(e) or self:GetOldGlobal(e)
-		end,
-		RenameLocal = function(self, h, i)
-			h = type(h) == "string" and h or h.Name
-			local j = false
-			local g = self:GetLocal(h)
-			if g then
-				g.Name = i
-				self:mapLocal(h, g)
-				j = true
-			end
-			if not j and self.Parent then
-				self.Parent:RenameLocal(h, i)
-			end
-		end,
-		RenameGlobal = function(self, h, i)
-			h = type(h) == "string" and h or h.Name
-			local j = false
-			local g = self:GetGlobal(h)
-			if g then
-				g.Name = i
-				self:mapGlobal(h, g)
-				j = true
-			end
-			if not j and self.Parent then
-				self.Parent:RenameGlobal(h, i)
-			end
-		end,
-		RenameVariable = function(self, h, i)
-			h = type(h) == "string" and h or h.Name
-			if self:GetLocal(h) then
-				self:RenameLocal(h, i)
-			else
-				self:RenameGlobal(h, i)
-			end
-		end,
-		GetAllVariables = function(self)
-			local k = self:getVars(true)
-			for f, d in pairs(self:getVars(false)) do
-				table.insert(k, d)
-			end
-			return k
-		end,
-		getVars = function(self, l)
-			local k = {}
-			if l then
-				for f, d in pairs(self.Children) do
-					for m, n in pairs(d:getVars(true)) do
-						table.insert(k, n)
-					end
-				end
-			else
-				for f, d in pairs(self.Locals) do
-					table.insert(k, d)
-				end
-				for f, d in pairs(self.Globals) do
-					table.insert(k, d)
-				end
-				if self.Parent then
-					for f, d in pairs(self.Parent:getVars(false)) do
-						table.insert(k, d)
-					end
-				end
-			end
-			return k
-		end,
-		CreateGlobal = function(self, e)
-			local d
-			d = self:GetGlobal(e)
-			if d then
-				return d
-			end
-			d = {}
-			d.Scope = self
-			d.Name = e
-			d.IsGlobal = true
-			d.CanRename = true
-			d.References = 1
-			self:AddGlobal(d)
-			return d
-		end,
-		GetGlobal = function(self, e)
-			for f, d in pairs(self.Globals) do
-				if d.Name == e then
-					return d
-				end
-			end
-			if self.Parent then
-				return self.Parent:GetGlobal(e)
-			end
-		end,
-		GetVariable = function(self, e)
-			return self:GetLocal(e) or self:GetGlobal(e)
-		end,
-		ObfuscateLocals = function(self, o, p)
-			o = o or 7
-			local r = p or "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuioplkjhgfdsazxcvbnm1234567890"
-			for s, g in pairs(self.Locals) do
-				local t = ""
-				local u = 0
-				repeat
-					local v = math.random(1, #r)
-					t = t .. r:sub(v, v)
-					for w = 1, math.random(0, u > 5 and 30 or o) do
-						local v = math.random(1, #r)
-						t = t .. r:sub(v, v)
-					end
-					u = u + 1
-				until not self:GetVariable(t)
-				t = ("."):rep(math.random(20, 50)):gsub(".", function()
-					return ({"l", "I"})[math.random(1, 2)]
-				end) .. "_" .. t
-				self:RenameLocal(g.Name, t)
-			end
-		end,
-		BeautifyVariables = function(self, x)
-			for _, v in ipairs(self.Locals) do
-				self:RenameLocal(v, getNewLocal())
+local Scope = {
+	new = function(a, b)
+		local c = {
+			Parent = b,
+			Locals = {},
+			Globals = {},
+			oldLocalNamesMap = {},
+			oldGlobalNamesMap = {},
+			Children = {}
+		}
+		if b then
+			table.insert(b.Children, c)
+		end
+		return setmetatable(c, {
+			__index = a
+		})
+	end,
+	AddLocal = function(e, d)
+		table.insert(e.Locals, d)
+	end,
+	AddGlobal = function(f, g)
+		table.insert(f.Globals, g)
+	end,
+	CreateLocal = function(h, i)
+		local j
+		j = h:GetLocal(i)
+		if j then
+			return j
+		end
+		j = {}
+		j.Scope = h
+		j.Name = i
+		j.IsGlobal = false
+		j.CanRename = true
+		j.References = 1
+		h:AddLocal(j)
+		return j
+	end,
+	GetLocal = function(k, l)
+		for m, n in pairs(k.Locals) do
+			if n.Name == l then
+				return n
 			end
 		end
-	}
-	return a
-end)()
-local ParseLua = (function()
-	local a = Util.lookupify
-	local b = a({" ", "\n", "\t", "\r"})
-	local c = {
-		["\r"] = "\\r",
-		["\n"] = "\\n",
-		["\t"] = "\\t",
-		["\""] = "\\\"",
-		["'"] = "\\'"
-	}
-	local d = a({"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"})
-	local e = a({"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"})
-	local f = a({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
-	local g = a({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "a", "B", "b", "C", "c", "D", "d", "E", "e", "F", "f"})
-	local h = a({"+", "-", "*", "/", "^", "%", ",", "{", "}", "[", "]", "(", ")", ";", "#"})
-	local j = a({"and", "break", "continue", "do", "else", "elseif", "end", "false", "for", "function", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"})
-	local function k(l)
-		local m = {}
-		local n, o = pcall(function()
-			local p = 1
-			local q = 1
-			local r = 1
-			local function s()
-				local t = l:sub(p, p)
-				if t == "\n" then
-					r = 1
-					q = q + 1
-				else
-					r = r + 1
+		if k.Parent then
+			return k.Parent:GetLocal(l)
+		end
+	end,
+	GetOldLocal = function(o, p)
+		if o.oldLocalNamesMap[p] then
+			return o.oldLocalNamesMap[p]
+		end
+		return o:GetLocal(p)
+	end,
+	mapLocal = function(q, r, s)
+		q.oldLocalNamesMap[r] = s
+	end,
+	GetOldGlobal = function(t, u)
+		if t.oldGlobalNamesMap[u] then
+			return t.oldGlobalNamesMap[u]
+		end
+		return t:GetGlobal(u)
+	end,
+	mapGlobal = function(v, w, x)
+		v.oldGlobalNamesMap[w] = x
+	end,
+	GetOldVariable = function(y, z)
+		return y:GetOldLocal(z) or y:GetOldGlobal(z)
+	end,
+	RenameLocal = function(A, B, C)
+		B = type(B) == "string" and B or B.Name
+		local D = false
+		local E = A:GetLocal(B)
+		if E then
+			E.Name = C
+			A:mapLocal(B, E)
+			D = true
+		end
+		if not D and A.Parent then
+			A.Parent:RenameLocal(B, C)
+		end
+	end,
+	RenameGlobal = function(F, G, H)
+		G = type(G) == "string" and G or G.Name
+		local I = false
+		local J = F:GetGlobal(G)
+		if J then
+			J.Name = H
+			F:mapGlobal(G, J)
+			I = true
+		end
+		if not I and F.Parent then
+			F.Parent:RenameGlobal(G, H)
+		end
+	end,
+	RenameVariable = function(K, L, M)
+		L = type(L) == "string" and L or L.Name
+		if K:GetLocal(L) then
+			K:RenameLocal(L, M)
+		else
+			K:RenameGlobal(L, M)
+		end
+	end,
+	GetAllVariables = function(N)
+		local O = N:getVars(true)
+		for P, Q in pairs(N:getVars(false)) do
+			table.insert(O, Q)
+		end
+		return O
+	end,
+	getVars = function(R, S)
+		local T = {}
+		if S then
+			for U, V in pairs(R.Children) do
+				for W, X in pairs(V:getVars(true)) do
+					table.insert(T, X)
 				end
-				p = p + 1
-				return t
 			end
-			local function u(v)
-				v = v or 0
-				return l:sub(p + v, p + v)
+		else
+			for Y, Z in pairs(R.Locals) do
+				table.insert(T, Z)
 			end
-			local function w(x)
-				local t = u()
-				for y = 1, #x do
-					if t == x:sub(y, y) then
-						return s()
-					end
+			for ab, bb in pairs(R.Globals) do
+				table.insert(T, bb)
+			end
+			if R.Parent then
+				for cb, db in pairs(R.Parent:getVars(false)) do
+					table.insert(T, db)
 				end
 			end
-			local function z(o)
-				return error(">> :" .. q .. ":" .. r .. ": " .. o, 0)
+		end
+		return T
+	end,
+	CreateGlobal = function(eb, fb)
+		local gb
+		gb = eb:GetGlobal(fb)
+		if gb then
+			return gb
+		end
+		gb = {}
+		gb.Scope = eb
+		gb.Name = fb
+		gb.IsGlobal = true
+		gb.CanRename = true
+		gb.References = 1
+		eb:AddGlobal(gb)
+		return gb
+	end,
+	GetGlobal = function(hb, ib)
+		for jb, kb in pairs(hb.Globals) do
+			if kb.Name == ib then
+				return kb
 			end
-			local function A()
-				local B = p
-				if u() == "[" then
-					local C = 0
-					local D = 1
-					while u(C + 1) == "=" do
-						C = C + 1
+		end
+		if hb.Parent then
+			return hb.Parent:GetGlobal(ib)
+		end
+	end,
+	GetVariable = function(lb, mb)
+		return lb:GetLocal(mb) or lb:GetGlobal(mb)
+	end,
+	ObfuscateLocals = function(nb, ob, pb)
+		ob = ob or 7
+		local qb = pb or "QWERTYUIOPASDFGHJKLZXCVBNMqwertyuioplkjhgfdsazxcvbnm1234567890"
+		for rb, sb in pairs(nb.Locals) do
+			local tb = ""
+			local ub = 0
+			repeat
+				local vb = math.random(1, #qb)
+				tb = tb .. qb:sub(vb, vb)
+				for wb = 1, math.random(0, ub > 5 and 30 or ob) do
+					local vb = math.random(1, #qb)
+					tb = tb .. qb:sub(vb, vb)
+				end
+				ub = ub + 1
+			until not nb:GetVariable(tb)
+			tb = ("."):rep(math.random(20, 50)):gsub(".", function()
+				return ({"l", "I"})[math.random(1, 2)]
+			end) .. "_" .. tb
+			nb:RenameLocal(sb.Name, tb)
+		end
+	end,
+	BeautifyVariables = function(xb, yb)
+		for zb, Ab in ipairs(xb.Locals) do
+			xb:RenameLocal(Ab, getNewLocal())
+		end
+	end
+}
+local function LL(a)
+	local b = {}
+	local c, d = pcall(function()
+		local h = 1
+		local i = 1
+		local j = 1
+		local function k()
+			local p = a:sub(h, h)
+			if p == "\n" then
+				j = 1
+				i = i + 1
+			else
+				j = j + 1
+			end
+			h = h + 1
+			return p
+		end
+		local function l(q)
+			q = q or 0
+			return a:sub(h + q, h + q)
+		end
+		local function m(r)
+			local s = l()
+			for t = 1, #r do
+				if s == r:sub(t, t) then
+					return k()
+				end
+			end
+		end
+		local function n(u)
+			return error(">> :" .. i .. ":" .. j .. ": " .. u, 0)
+		end
+		local function o()
+			local v = h
+			if l() == "[" then
+				local w = 0
+				local x = 1
+				while l(w + 1) == "=" do
+					w = w + 1
+				end
+				if l(w + 1) == "[" then
+					for B = 0, w + 1 do
+						k()
 					end
-					if u(C + 1) == "[" then
-						for E = 0, C + 1 do
-							s()
+					local y = h
+					while true do
+						if l() == "" then
+							n("Expected `]" .. ("="):rep(w) .. "]` near <eof>.", 3)
 						end
-						local F = p
-						while true do
-							if u() == "" then
-								z("Expected `]" .. ("="):rep(C) .. "]` near <eof>.", 3)
+						local C = true
+						if l() == "]" then
+							for D = 1, w do
+								if l(D) ~= "=" then
+									C = false
+								end
 							end
-							local G = true
-							if u() == "]" then
-								for y = 1, C do
-									if u(y) ~= "=" then
-										G = false
+							if l(w + 1) ~= "]" then
+								C = false
+							end
+						else
+							if l() == "[" then
+								local E = true
+								for F = 1, w do
+									if l(F) ~= "=" then
+										E = false
+										break
 									end
 								end
-								if u(C + 1) ~= "]" then
-									G = false
+								if l(w + 1) == "[" and E then
+									x = x + 1
+									for G = 1, w + 2 do
+										k()
+									end
 								end
+							end
+							C = false
+						end
+						if C then
+							x = x - 1
+							if x == 0 then
+								break
 							else
-								if u() == "[" then
-									local H = true
-									for y = 1, C do
-										if u(y) ~= "=" then
-											H = false
-											break
-										end
-									end
-									if u(C + 1) == "[" and H then
-										D = D + 1
-										for y = 1, C + 2 do
-											s()
-										end
-									end
+								for H = 1, w + 2 do
+									k()
 								end
-								G = false
 							end
-							if G then
-								D = D - 1
-								if D == 0 then
-									break
-								else
-									for y = 1, C + 2 do
-										s()
-									end
-								end
-							else
-								s()
-							end
+						else
+							k()
 						end
-						local I = l:sub(F, p - 1)
-						for y = 0, C + 1 do
-							s()
-						end
-						local J = l:sub(B, p - 1)
-						return I, J
-					else
-						return nil
 					end
+					local z = a:sub(y, h - 1)
+					for I = 0, w + 1 do
+						k()
+					end
+					local A = a:sub(v, h - 1)
+					return z, A
 				else
 					return nil
 				end
+			else
+				return nil
 			end
+		end
+		while true do
+			local J = {}
+			local K = ""
+			local L = false
 			while true do
-				local K = {}
-				local L = ""
-				local M = false
-				while true do
-					local t = u()
-					if t == "#" and u(1) == "!" and q == 1 then
-						s()
-						s()
-						L = "#!"
-						while u() ~= "\n" and u() ~= "" do
-							L = L .. s()
-						end
-						local N = {
-							Type = "Comment",
-							CommentType = "Shebang",
-							Data = L,
-							Line = q,
-							Char = r
-						}
-						N.Print = function()
-							return "<" .. (N.Type .. (" "):rep(7 - #N.Type)) .. "  " .. (N.Data or "") .. " >"
-						end
-						L = ""
-						table.insert(K, N)
+				local R = l()
+				if R == "#" and l(1) == "!" and i == 1 then
+					k()
+					k()
+					K = "#!"
+					while l() ~= "\n" and l() ~= "" do
+						K = K .. k()
 					end
-					if t == " " or t == "\t" then
-						local O = s()
-						table.insert(K, {
-							Type = "Whitespace",
-							Line = q,
-							Char = r,
-							Data = O
-						})
-					elseif t == "\n" or t == "\r" then
-						local P = s()
-						if L ~= "" then
-							local N = {
-								Type = "Comment",
-								CommentType = M and "LongComment" or "Comment",
-								Data = L,
-								Line = q,
-								Char = r
-							}
-							N.Print = function()
-								return "<" .. (N.Type .. (" "):rep(7 - #N.Type)) .. "  " .. (N.Data or "") .. " >"
-							end
-							table.insert(K, N)
-							L = ""
-						end
-						table.insert(K, {
-							Type = "Whitespace",
-							Line = q,
-							Char = r,
-							Data = P
-						})
-					elseif t == "-" and u(1) == "-" then
-						s()
-						s()
-						L = L .. "--"
-						local E, Q = A()
-						if Q then
-							L = L .. Q
-							M = true
-						else
-							while u() ~= "\n" and u() ~= "" do
-								L = L .. s()
-							end
-						end
-					else
-						break
-					end
-				end
-				if L ~= "" then
-					local N = {
+					local S = {
 						Type = "Comment",
-						CommentType = M and "LongComment" or "Comment",
-						Data = L,
-						Line = q,
-						Char = r
+						CommentType = "Shebang",
+						Data = K,
+						Line = i,
+						Char = j
 					}
-					N.Print = function()
-						return "<" .. (N.Type .. (" "):rep(7 - #N.Type)) .. "  " .. (N.Data or "") .. " >"
+					S.Print = function()
+						return "<" .. (S.Type .. (" "):rep(7 - #S.Type)) .. "  " .. (S.Data or "") .. " >"
 					end
-					table.insert(K, N)
+					K = ""
+					table.insert(J, S)
 				end
-				local R = q
-				local S = r
-				local T = ":" .. q .. ":" .. r .. ":> "
-				local t = u()
-				local U = nil
-				if t == "" then
-					U = {
-						Type = "Eof"
-					}
-				elseif e[t] or d[t] or t == "_" then
-					local B = p
-					repeat
-						s()
-						t = u()
-					until not (e[t] or d[t] or f[t] or t == "_")
-					local V = l:sub(B, p - 1)
-					if j[V] then
-						U = {
-							Type = "Keyword",
-							Data = V
+				if R == " " or R == "\t" then
+					local T = k()
+					table.insert(J, {
+						Type = "Whitespace",
+						Line = i,
+						Char = j,
+						Data = T
+					})
+				elseif R == "\n" or R == "\r" then
+					local U = k()
+					if K ~= "" then
+						local V = {
+							Type = "Comment",
+							CommentType = L and "LongComment" or "Comment",
+							Data = K,
+							Line = i,
+							Char = j
 						}
+						V.Print = function()
+							return "<" .. (V.Type .. (" "):rep(7 - #V.Type)) .. "  " .. (V.Data or "") .. " >"
+						end
+						table.insert(J, V)
+						K = ""
+					end
+					table.insert(J, {
+						Type = "Whitespace",
+						Line = i,
+						Char = j,
+						Data = U
+					})
+				elseif R == "-" and l(1) == "-" then
+					k()
+					k()
+					K = K .. "--"
+					local W, X = o()
+					if X then
+						K = K .. X
+						L = true
 					else
-						U = {
-							Type = "Ident",
-							Data = V
-						}
-					end
-				elseif f[t] or u() == "." and f[u(1)] then
-					local B = p
-					if t == "0" and u(1):lower() == "x" then
-						s()
-						s()
-						while g[u()] do
-							s()
-						end
-						if w("Pp") then
-							w("+-")
-							while f[u()] do
-								s()
-							end
-						end
-					else
-						while f[u()] do
-							s()
-						end
-						if w(".") then
-							while f[u()] do
-								s()
-							end
-						end
-						if w("Ee") then
-							w("+-")
-							while f[u()] do
-								s()
-							end
+						while l() ~= "\n" and l() ~= "" do
+							K = K .. k()
 						end
 					end
-					U = {
-						Type = "Number",
-						Data = l:sub(B, p - 1)
-					}
-				elseif t == "'" or t == "\"" then
-					local B = p
-					local W = s()
-					local F = p
-					while true do
-						local t = s()
-						if t == "\\" then
-							s()
-						elseif t == W then
-							break
-						elseif t == "" then
-							z("Unfinished string near <eof>")
-						end
-					end
-					local X = l:sub(F, p - 2)
-					local Y = l:sub(B, p - 1)
-					U = {
-						Type = "string",
-						Data = Y,
-						Constant = X
-					}
-				elseif t == "[" then
-					local X, Z = A()
-					if Z then
-						U = {
-							Type = "string",
-							Data = Z,
-							Constant = X
-						}
-					else
-						s()
-						U = {
-							Type = "Symbol",
-							Data = "["
-						}
-					end
-				elseif w(">=<") then
-					if w("=") then
-						U = {
-							Type = "Symbol",
-							Data = t .. "="
-						}
-					else
-						U = {
-							Type = "Symbol",
-							Data = t
-						}
-					end
-				elseif w("~") then
-					if w("=") then
-						U = {
-							Type = "Symbol",
-							Data = "~="
-						}
-					else
-						z("Unexpected symbol `~` in source.", 2)
-					end
-				elseif w(".") then
-					if w(".") then
-						if w(".") then
-							U = {
-								Type = "Symbol",
-								Data = "..."
-							}
-						else
-							U = {
-								Type = "Symbol",
-								Data = ".."
-							}
-						end
-					else
-						U = {
-							Type = "Symbol",
-							Data = "."
-						}
-					end
-				elseif w(":") then
-					if w(":") then
-						U = {
-							Type = "Symbol",
-							Data = "::"
-						}
-					else
-						U = {
-							Type = "Symbol",
-							Data = ":"
-						}
-					end
-				elseif h[t] then
-					s()
-					U = {
-						Type = "Symbol",
-						Data = t
-					}
-				else
-					local _, a0 = A()
-					if _ then
-						U = {
-							Type = "string",
-							Data = a0,
-							Constant = _
-						}
-					else
-						z("Unexpected Symbol `" .. t .. "` in source.", 2)
-					end
-				end
-				U.LeadingWhite = K
-				U.Line = R
-				U.Char = S
-				U.Print = function()
-					return "<" .. (U.Type .. (" "):rep(7 - #U.Type)) .. "  " .. (U.Data or "") .. " >"
-				end
-				m[#m + 1] = U
-				if U.Type == "Eof" then
-					break
-				end
-			end
-		end)
-		if not n then
-			return false, o
-		end
-		local a1 = {}
-		local a2 = {}
-		local p = 1
-		function a1:getp()
-			return p
-		end
-		function a1:setp(v)
-			p = v
-		end
-		function a1:getTokenList()
-			return m
-		end
-		function a1:Peek(v)
-			v = v or 0
-			return m[math.min(#m, p + v)]
-		end
-		function a1:Get(a3)
-			local a4 = m[p]
-			p = math.min(p + 1, #m)
-			if a3 then
-				table.insert(a3, a4)
-			end
-			return a4
-		end
-		function a1:Is(a4)
-			return a1:Peek().Type == a4
-		end
-		function a1:Save()
-			a2[#a2 + 1] = p
-		end
-		function a1:Commit()
-			a2[#a2] = nil
-		end
-		function a1:Restore()
-			p = a2[#a2]
-			a2[#a2] = nil
-		end
-		function a1:ConsumeSymbol(a5, a3)
-			local a4 = self:Peek()
-			if a4.Type == "Symbol" then
-				if a5 then
-					if a4.Data == a5 then
-						self:Get(a3)
-						return true
-					else
-						return nil
-					end
-				else
-					self:Get(a3)
-					return a4
-				end
-			else
-				return nil
-			end
-		end
-		function a1:ConsumeKeyword(a6, a3)
-			local a4 = self:Peek()
-			if a4.Type == "Keyword" and a4.Data == a6 then
-				self:Get(a3)
-				return true
-			else
-				return nil
-			end
-		end
-		function a1:IsKeyword(a6)
-			local a4 = a1:Peek()
-			return a4.Type == "Keyword" and a4.Data == a6
-		end
-		function a1:IsSymbol(a7)
-			local a4 = a1:Peek()
-			return a4.Type == "Symbol" and a4.Data == a7
-		end
-		function a1:IsEof()
-			return a1:Peek().Type == "Eof"
-		end
-		return true, a1
-	end
-	local function a8(l)
-		local n, a1
-		if type(l) ~= "table" then
-			n, a1 = k(l)
-		else
-			n, a1 = true, l
-		end
-		if not n then
-			return false, a1
-		end
-		local function a9(aa)
-			local o = ">> :" .. a1:Peek().Line .. ":" .. a1:Peek().Char .. ": " .. aa .. "\n"
-			local ab = 0
-			if type(l) == "string" then
-				for q in l:gmatch("[^\n]*\n?") do
-					if q:sub(-1, -1) == "\n" then
-						q = q:sub(1, -2)
-					end
-					ab = ab + 1
-					if ab == a1:Peek().Line then
-						o = o .. ">> `" .. q:gsub("\t", "\t") .. "`\n"
-						for y = 1, a1:Peek().Char do
-							local t = q:sub(y, y)
-							if t == "\t" then
-								o = o .. "\t"
-							else
-								o = o .. " "
-							end
-						end
-						o = o .. "   ^^^^"
-						break
-					end
-				end
-			end
-			return o
-		end
-		local ac = 0
-		local ad = {"_", "a", "b", "c", "d"}
-		local function ae(af)
-			local ag = Scope:new(af)
-			ag.RenameVars = ag.ObfuscateLocals
-			ag.ObfuscateVariables = ag.ObfuscateLocals
-			ag.BeautifyVars = ag.BeautifyVariables
-			ag.Print = function()
-				return "<Scope>"
-			end
-			return ag
-		end
-		local ah
-		local ai
-		local aj, ak, al, am
-		local function an(ag, a3)
-			local ao = ae(ag)
-			if not a1:ConsumeSymbol("(", a3) then
-				return false, a9("`(` expected.")
-			end
-			local ap = {}
-			local aq = false
-			while not a1:ConsumeSymbol(")", a3) do
-				if a1:Is("Ident") then
-					local ar = ao:CreateLocal(a1:Get(a3).Data)
-					ap[#ap + 1] = ar
-					if not a1:ConsumeSymbol(",", a3) then
-						if a1:ConsumeSymbol(")", a3) then
-							break
-						else
-							return false, a9("`)` expected.")
-						end
-					end
-				elseif a1:ConsumeSymbol("...", a3) then
-					aq = true
-					if not a1:ConsumeSymbol(")", a3) then
-						return false, a9("`...` must be the last argument of a function.")
-					end
-					break
-				else
-					return false, a9("Argument name or `...` expected")
-				end
-			end
-			local n, as = ai(ao)
-			if not n then
-				return false, as
-			end
-			if not a1:ConsumeKeyword("end", a3) then
-				return false, a9("`end` expected after function body")
-			end
-			local at = {}
-			at.AstType = "Function"
-			at.Scope = ao
-			at.Arguments = ap
-			at.Body = as
-			at.VarArg = aq
-			at.Tokens = a3
-			return true, at
-		end
-		function al(ag)
-			local a3 = {}
-			if a1:ConsumeSymbol("(", a3) then
-				local n, au = ah(ag)
-				if not n then
-					return false, au
-				end
-				if not a1:ConsumeSymbol(")", a3) then
-					return false, a9("`)` Expected.")
-				end
-				if false then
-					au.ParenCount = (au.ParenCount or 0) + 1
-					return true, au
-				else
-					local av = {}
-					av.AstType = "Parentheses"
-					av.Inner = au
-					av.Tokens = a3
-					return true, av
-				end
-			elseif a1:Is("Ident") then
-				local aw = a1:Get(a3)
-				local ax = ag:GetLocal(aw.Data)
-				if not ax then
-					ax = ag:GetGlobal(aw.Data)
-					if not ax then
-						ax = ag:CreateGlobal(aw.Data)
-					else
-						ax.References = ax.References + 1
-					end
-				else
-					ax.References = ax.References + 1
-				end
-				local ay = {}
-				ay.AstType = "VarExpr"
-				ay.Name = aw.Data
-				ay.Variable = ax
-				ay.Tokens = a3
-				return true, ay
-			else
-				return false, a9("primary expression expected")
-			end
-		end
-		function am(ag, az)
-			local n, aA = al(ag)
-			if not n then
-				return false, aA
-			end
-			while true do
-				local a3 = {}
-				if a1:IsSymbol(".") or a1:IsSymbol(":") then
-					local a5 = a1:Get(a3).Data
-					if not a1:Is("Ident") then
-						return false, a9("<Ident> expected.")
-					end
-					local aw = a1:Get(a3)
-					local aB = {}
-					aB.AstType = "MemberExpr"
-					aB.Base = aA
-					aB.Indexer = a5
-					aB.Ident = aw
-					aB.Tokens = a3
-					aA = aB
-				elseif not az and a1:ConsumeSymbol("[", a3) then
-					local n, au = ah(ag)
-					if not n then
-						return false, au
-					end
-					if not a1:ConsumeSymbol("]", a3) then
-						return false, a9("`]` expected.")
-					end
-					local aB = {}
-					aB.AstType = "IndexExpr"
-					aB.Base = aA
-					aB.Index = au
-					aB.Tokens = a3
-					aA = aB
-				elseif not az and a1:ConsumeSymbol("(", a3) then
-					local aC = {}
-					while not a1:ConsumeSymbol(")", a3) do
-						local n, au = ah(ag)
-						if not n then
-							return false, au
-						end
-						aC[#aC + 1] = au
-						if not a1:ConsumeSymbol(",", a3) then
-							if a1:ConsumeSymbol(")", a3) then
-								break
-							else
-								return false, a9("`)` Expected.")
-							end
-						end
-					end
-					local aD = {}
-					aD.AstType = "CallExpr"
-					aD.Base = aA
-					aD.Arguments = aC
-					aD.Tokens = a3
-					aA = aD
-				elseif not az and a1:Is("string") then
-					local aD = {}
-					aD.AstType = "StringCallExpr"
-					aD.Base = aA
-					aD.Arguments = {a1:Get(a3)}
-					aD.Tokens = a3
-					aA = aD
-				elseif not az and a1:IsSymbol("{") then
-					local n, au = aj(ag)
-					if not n then
-						return false, au
-					end
-					local aD = {}
-					aD.AstType = "TableCallExpr"
-					aD.Base = aA
-					aD.Arguments = {au}
-					aD.Tokens = a3
-					aA = aD
 				else
 					break
 				end
 			end
-			return true, aA
-		end
-		function aj(ag)
-			local a3 = {}
-			if a1:Is("Number") then
-				local aE = {}
-				aE.AstType = "NumberExpr"
-				aE.Value = a1:Get(a3)
-				aE.Tokens = a3
-				return true, aE
-			elseif a1:Is("string") then
-				local aF = {}
-				aF.AstType = "StringExpr"
-				aF.Value = a1:Get(a3)
-				aF.Tokens = a3
-				return true, aF
-			elseif a1:ConsumeKeyword("nil", a3) then
-				local aG = {}
-				aG.AstType = "NilExpr"
-				aG.Tokens = a3
-				return true, aG
-			elseif a1:IsKeyword("false") or a1:IsKeyword("true") then
-				local aH = {}
-				aH.AstType = "BooleanExpr"
-				aH.Value = a1:Get(a3).Data == "true"
-				aH.Tokens = a3
-				return true, aH
-			elseif a1:ConsumeSymbol("...", a3) then
-				local aI = {}
-				aI.AstType = "DotsExpr"
-				aI.Tokens = a3
-				return true, aI
-			elseif a1:ConsumeSymbol("{", a3) then
-				local aJ = {}
-				aJ.AstType = "ConstructorExpr"
-				aJ.EntryList = {}
-				while true do
-					if a1:IsSymbol("[", a3) then
-						a1:Get(a3)
-						local n, aK = ah(ag)
-						if not n then
-							return false, a9("Key Expression Expected")
-						end
-						if not a1:ConsumeSymbol("]", a3) then
-							return false, a9("`]` Expected")
-						end
-						if not a1:ConsumeSymbol("=", a3) then
-							return false, a9("`=` Expected")
-						end
-						local n, aL = ah(ag)
-						if not n then
-							return false, a9("Value Expression Expected")
-						end
-						aJ.EntryList[#aJ.EntryList + 1] = {
-							Type = "Key",
-							Key = aK,
-							Value = aL
-						}
-					elseif a1:Is("Ident") then
-						local aM = a1:Peek(1)
-						if aM.Type == "Symbol" and aM.Data == "=" then
-							local aK = a1:Get(a3)
-							if not a1:ConsumeSymbol("=", a3) then
-								return false, a9("`=` Expected")
-							end
-							local n, aL = ah(ag)
-							if not n then
-								return false, a9("Value Expression Expected")
-							end
-							aJ.EntryList[#aJ.EntryList + 1] = {
-								Type = "KeyString",
-								Key = aK.Data,
-								Value = aL
-							}
-						else
-							local n, aL = ah(ag)
-							if not n then
-								return false, a9("Value Exected")
-							end
-							aJ.EntryList[#aJ.EntryList + 1] = {
-								Type = "Value",
-								Value = aL
-							}
-						end
-					elseif a1:ConsumeSymbol("}", a3) then
-						break
-					else
-						local n, aL = ah(ag)
-						aJ.EntryList[#aJ.EntryList + 1] = {
-							Type = "Value",
-							Value = aL
-						}
-						if not n then
-							return false, a9("Value Expected")
-						end
-					end
-					if a1:ConsumeSymbol(";", a3) or a1:ConsumeSymbol(",", a3) then
-					elseif a1:ConsumeSymbol("}", a3) then
-						break
-					else
-						return false, a9("`}` or table entry Expected")
-					end
+			if K ~= "" then
+				local Y = {
+					Type = "Comment",
+					CommentType = L and "LongComment" or "Comment",
+					Data = K,
+					Line = i,
+					Char = j
+				}
+				Y.Print = function()
+					return "<" .. (Y.Type .. (" "):rep(7 - #Y.Type)) .. "  " .. (Y.Data or "") .. " >"
 				end
-				aJ.Tokens = a3
-				return true, aJ
-			elseif a1:ConsumeKeyword("function", a3) then
-				local n, aN = an(ag, a3)
-				if not n then
-					return false, aN
-				end
-				aN.IsLocal = true
-				return true, aN
-			else
-				return am(ag)
+				table.insert(J, Y)
 			end
-		end
-		local aO = a({"-", "not", "#"})
-		local aP = 8
-		local aQ = {
-			["+"] = {6, 6},
-			["-"] = {6, 6},
-			["%"] = {7, 7},
-			["/"] = {7, 7},
-			["*"] = {7, 7},
-			["^"] = {10, 9},
-			[".."] = {5, 4},
-			["=="] = {3, 3},
-			["<"] = {3, 3},
-			["<="] = {3, 3},
-			["~="] = {3, 3},
-			[">"] = {3, 3},
-			[">="] = {3, 3},
-			["and"] = {2, 2},
-			["or"] = {1, 1}
-		}
-		function ak(ag, aR)
-			local n, aS
-			if aO[a1:Peek().Data] then
-				local a3 = {}
-				local aT = a1:Get(a3).Data
-				n, aS = ak(ag, aP)
-				if not n then
-					return false, aS
-				end
-				local aU = {}
-				aU.AstType = "UnopExpr"
-				aU.Rhs = aS
-				aU.Op = aT
-				aU.OperatorPrecedence = aP
-				aU.Tokens = a3
-				aS = aU
-			else
-				n, aS = aj(ag)
-				if not n then
-					return false, aS
-				end
-			end
-			while true do
-				local aV = aQ[a1:Peek().Data]
-				if aV and aV[1] > aR then
-					local a3 = {}
-					local aT = a1:Get(a3).Data
-					local n, aW = ak(ag, aV[2])
-					if not n then
-						return false, aW
-					end
-					local aU = {}
-					aU.AstType = "BinopExpr"
-					aU.Lhs = aS
-					aU.Op = aT
-					aU.OperatorPrecedence = aV[1]
-					aU.Rhs = aW
-					aU.Tokens = a3
-					aS = aU
-				else
-					break
-				end
-			end
-			return true, aS
-		end
-		ah = function(ag)
-			return ak(ag, 0)
-		end
-		local function aX(ag)
-			local aY = nil
-			local a3 = {}
-			if a1:ConsumeKeyword("if", a3) then
-				local aZ = {}
-				aZ.AstType = "IfStatement"
-				aZ.Clauses = {}
+			local M = i
+			local N = j
+			local O = ":" .. i .. ":" .. j .. ":> "
+			local P = l()
+			local Q = nil
+			if P == "" then
+				Q = {
+					Type = "Eof"
+				}
+			elseif LettersU[P] or LettersL[P] or P == "_" then
+				local Z = h
 				repeat
-					local n, a_ = ah(ag)
-					if not n then
-						return false, a_
-					end
-					if not a1:ConsumeKeyword("then", a3) then
-						return false, a9("`then` expected.")
-					end
-					local n, b0 = ai(ag)
-					if not n then
-						return false, b0
-					end
-					aZ.Clauses[#aZ.Clauses + 1] = {
-						Condition = a_,
-						Body = b0
+					k()
+					P = l()
+				until not (LettersU[P] or LettersL[P] or Numbers[P] or P == "_")
+				local ab = a:sub(Z, h - 1)
+				if Keywords[ab] then
+					Q = {
+						Type = "Keyword",
+						Data = ab
 					}
-				until not a1:ConsumeKeyword("elseif", a3)
-				if a1:ConsumeKeyword("else", a3) then
-					local n, b0 = ai(ag)
-					if not n then
-						return false, b0
-					end
-					aZ.Clauses[#aZ.Clauses + 1] = {
-						Body = b0
+				else
+					Q = {
+						Type = "Ident",
+						Data = ab
 					}
 				end
-				if not a1:ConsumeKeyword("end", a3) then
-					return false, a9("`end` expected.")
-				end
-				aZ.Tokens = a3
-				aY = aZ
-			elseif a1:ConsumeKeyword("while", a3) then
-				local b1 = {}
-				b1.AstType = "WhileStatement"
-				local n, a_ = ah(ag)
-				if not n then
-					return false, a_
-				end
-				if not a1:ConsumeKeyword("do", a3) then
-					return false, a9("`do` expected.")
-				end
-				local n, b0 = ai(ag)
-				if not n then
-					return false, b0
-				end
-				if not a1:ConsumeKeyword("end", a3) then
-					return false, a9("`end` expected.")
-				end
-				b1.Condition = a_
-				b1.Body = b0
-				b1.Tokens = a3
-				aY = b1
-			elseif a1:ConsumeKeyword("do", a3) then
-				local n, b2 = ai(ag)
-				if not n then
-					return false, b2
-				end
-				if not a1:ConsumeKeyword("end", a3) then
-					return false, a9("`end` expected.")
-				end
-				local b3 = {}
-				b3.AstType = "DoStatement"
-				b3.Body = b2
-				b3.Tokens = a3
-				aY = b3
-			elseif a1:ConsumeKeyword("for", a3) then
-				if not a1:Is("Ident") then
-					return false, a9("<ident> expected.")
-				end
-				local b4 = a1:Get(a3)
-				if a1:ConsumeSymbol("=", a3) then
-					local b5 = ae(ag)
-					local b6 = b5:CreateLocal(b4.Data)
-					local n, b7 = ah(ag)
-					if not n then
-						return false, b7
+			elseif Numbers[P] or l() == "." and Numbers[l(1)] then
+				local bb = h
+				if P == "0" and l(1):lower() == "x" then
+					k()
+					k()
+					while NumbersH[l()] do
+						k()
 					end
-					if not a1:ConsumeSymbol(",", a3) then
-						return false, a9("`,` Expected")
-					end
-					local n, b8 = ah(ag)
-					if not n then
-						return false, b8
-					end
-					local n, b9
-					if a1:ConsumeSymbol(",", a3) then
-						n, b9 = ah(ag)
-						if not n then
-							return false, b9
+					if m("Pp") then
+						m("+-")
+						while Numbers[l()] do
+							k()
 						end
 					end
-					if not a1:ConsumeKeyword("do", a3) then
-						return false, a9("`do` expected")
-					end
-					local n, as = ai(b5)
-					if not n then
-						return false, as
-					end
-					if not a1:ConsumeKeyword("end", a3) then
-						return false, a9("`end` expected")
-					end
-					local ba = {}
-					ba.AstType = "NumericForStatement"
-					ba.Scope = b5
-					ba.Variable = b6
-					ba.Start = b7
-					ba.End = b8
-					ba.Step = b9
-					ba.Body = as
-					ba.Tokens = a3
-					aY = ba
 				else
-					local b5 = ae(ag)
-					local bb = {b5:CreateLocal(b4.Data)}
-					while a1:ConsumeSymbol(",", a3) do
-						if not a1:Is("Ident") then
-							return false, a9("for variable expected.")
+					while Numbers[l()] do
+						k()
+					end
+					if m(".") then
+						while Numbers[l()] do
+							k()
 						end
-						bb[#bb + 1] = b5:CreateLocal(a1:Get(a3).Data)
 					end
-					if not a1:ConsumeKeyword("in", a3) then
-						return false, a9("`in` expected.")
-					end
-					local bc = {}
-					local n, bd = ah(ag)
-					if not n then
-						return false, bd
-					end
-					bc[#bc + 1] = bd
-					while a1:ConsumeSymbol(",", a3) do
-						local n, be = ah(ag)
-						if not n then
-							return false, be
+					if m("Ee") then
+						m("+-")
+						while Numbers[l()] do
+							k()
 						end
-						bc[#bc + 1] = be
 					end
-					if not a1:ConsumeKeyword("do", a3) then
-						return false, a9("`do` expected.")
-					end
-					local n, as = ai(b5)
-					if not n then
-						return false, as
-					end
-					if not a1:ConsumeKeyword("end", a3) then
-						return false, a9("`end` expected.")
-					end
-					local ba = {}
-					ba.AstType = "GenericForStatement"
-					ba.Scope = b5
-					ba.VariableList = bb
-					ba.Generators = bc
-					ba.Body = as
-					ba.Tokens = a3
-					aY = ba
 				end
-			elseif a1:ConsumeKeyword("repeat", a3) then
-				local n, as = ai(ag)
-				if not n then
-					return false, as
-				end
-				if not a1:ConsumeKeyword("until", a3) then
-					return false, a9("`until` expected.")
-				end
-				local n, bf = ah(as.Scope)
-				if not n then
-					return false, bf
-				end
-				local bg = {}
-				bg.AstType = "RepeatStatement"
-				bg.Condition = bf
-				bg.Body = as
-				bg.Tokens = a3
-				aY = bg
-			elseif a1:ConsumeKeyword("function", a3) then
-				if not a1:Is("Ident") then
-					return false, a9("Function name expected")
-				end
-				local n, bh = am(ag, true)
-				if not n then
-					return false, bh
-				end
-				local n, aN = an(ag, a3)
-				if not n then
-					return false, aN
-				end
-				aN.IsLocal = false
-				aN.Name = bh
-				aY = aN
-			elseif a1:ConsumeKeyword("local", a3) then
-				if a1:Is("Ident") then
-					local bb = {a1:Get(a3).Data}
-					while a1:ConsumeSymbol(",", a3) do
-						if not a1:Is("Ident") then
-							return false, a9("local var name expected")
-						end
-						bb[#bb + 1] = a1:Get(a3).Data
+				Q = {
+					Type = "Number",
+					Data = a:sub(bb, h - 1)
+				}
+			elseif P == "'" or P == "\"" then
+				local cb = h
+				local db = k()
+				local eb = h
+				while true do
+					local P = k()
+					if P == "\\" then
+						k()
+					elseif P == db then
+						break
+					elseif P == "" then
+						n("Unfinished string near <eof>")
 					end
-					local bi = {}
-					if a1:ConsumeSymbol("=", a3) then
-						repeat
-							local n, au = ah(ag)
-							if not n then
-								return false, au
-							end
-							bi[#bi + 1] = au
-						until not a1:ConsumeSymbol(",", a3)
-					end
-					for y, aJ in pairs(bb) do
-						bb[y] = ag:CreateLocal(aJ)
-					end
-					local bj = {}
-					bj.AstType = "LocalStatement"
-					bj.LocalList = bb
-					bj.InitList = bi
-					bj.Tokens = a3
-					aY = bj
-				elseif a1:ConsumeKeyword("function", a3) then
-					if not a1:Is("Ident") then
-						return false, a9("Function name expected")
-					end
-					local bh = a1:Get(a3).Data
-					local bk = ag:CreateLocal(bh)
-					local n, aN = an(ag, a3)
-					if not n then
-						return false, aN
-					end
-					aN.Name = bk
-					aN.IsLocal = true
-					aY = aN
+				end
+				local fb = a:sub(eb, h - 2)
+				local gb = a:sub(cb, h - 1)
+				Q = {
+					Type = "string",
+					Data = gb,
+					Constant = fb
+				}
+			elseif P == "[" then
+				local hb, ib = o()
+				if ib then
+					Q = {
+						Type = "string",
+						Data = ib,
+						Constant = hb
+					}
 				else
-					return false, a9("local var or function def expected")
+					k()
+					Q = {
+						Type = "Symbol",
+						Data = "["
+					}
 				end
-			elseif a1:ConsumeSymbol("::", a3) then
-				if not a1:Is("Ident") then
-					return false, a9("Label name expected")
+			elseif m(">=<") then
+				if m("=") then
+					Q = {
+						Type = "Symbol",
+						Data = P .. "="
+					}
+				else
+					Q = {
+						Type = "Symbol",
+						Data = P
+					}
 				end
-				local bl = a1:Get(a3).Data
-				if not a1:ConsumeSymbol("::", a3) then
-					return false, a9("`::` expected")
+			elseif m("~") then
+				if m("=") then
+					Q = {
+						Type = "Symbol",
+						Data = "~="
+					}
+				else
+					n("Unexpected symbol `~` in source.", 2)
 				end
-				local bm = {}
-				bm.AstType = "LabelStatement"
-				bm.Label = bl
-				bm.Tokens = a3
-				aY = bm
-			elseif a1:ConsumeKeyword("return", a3) then
-				local bn = {}
-				if not a1:IsKeyword("end") then
-					local n, bo = ah(ag)
-					if n then
-						bn[1] = bo
-						while a1:ConsumeSymbol(",", a3) do
-							local n, au = ah(ag)
-							if not n then
-								return false, au
-							end
-							bn[#bn + 1] = au
-						end
+			elseif m(".") then
+				if m(".") then
+					if m(".") then
+						Q = {
+							Type = "Symbol",
+							Data = "..."
+						}
+					else
+						Q = {
+							Type = "Symbol",
+							Data = ".."
+						}
 					end
+				else
+					Q = {
+						Type = "Symbol",
+						Data = "."
+					}
 				end
-				local bp = {}
-				bp.AstType = "ReturnStatement"
-				bp.Arguments = bn
-				bp.Tokens = a3
-				aY = bp
-			elseif a1:ConsumeKeyword("break", a3) then
-				local bq = {}
-				bq.AstType = "BreakStatement"
-				bq.Tokens = a3
-				aY = bq
-			elseif a1:ConsumeKeyword("continue", a3) then
-				local bq = {}
-				bq.AstType = "ContinueStatement"
-				bq.Tokens = a3
-				aY = bq
+			elseif m(":") then
+				if m(":") then
+					Q = {
+						Type = "Symbol",
+						Data = "::"
+					}
+				else
+					Q = {
+						Type = "Symbol",
+						Data = ":"
+					}
+				end
+			elseif Operators[P] then
+				k()
+				Q = {
+					Type = "Symbol",
+					Data = P
+				}
 			else
-				local n, br = am(ag)
-				if not n then
-					return false, br
-				end
-				if a1:IsSymbol(",") or a1:IsSymbol("=") then
-					if (br.ParenCount or 0) > 0 then
-						return false, a9("Can not assign to parenthesized expression, is not an lvalue")
-					end
-					local bs = {br}
-					while a1:ConsumeSymbol(",", a3) do
-						local n, bt = am(ag)
-						if not n then
-							return false, bt
-						end
-						bs[#bs + 1] = bt
-					end
-					if not a1:ConsumeSymbol("=", a3) then
-						return false, a9("`=` Expected.")
-					end
-					local aW = {}
-					local n, bu = ah(ag)
-					if not n then
-						return false, bu
-					end
-					aW[1] = bu
-					while a1:ConsumeSymbol(",", a3) do
-						local n, bv = ah(ag)
-						if not n then
-							return false, bv
-						end
-						aW[#aW + 1] = bv
-					end
-					local bw = {}
-					bw.AstType = "AssignmentStatement"
-					bw.Lhs = bs
-					bw.Rhs = aW
-					bw.Tokens = a3
-					aY = bw
-				elseif br.AstType == "CallExpr" or br.AstType == "TableCallExpr" or br.AstType == "StringCallExpr" then
-					local aD = {}
-					aD.AstType = "CallStatement"
-					aD.Expression = br
-					aD.Tokens = a3
-					aY = aD
+				local jb, kb = o()
+				if jb then
+					Q = {
+						Type = "string",
+						Data = kb,
+						Constant = jb
+					}
 				else
-					return false, a9("Assignment Statement Expected")
+					n("Unexpected Symbol `" .. P .. "` in source.", 2)
 				end
 			end
-			if a1:IsSymbol(";") then
-				aY.Semicolon = a1:Get(aY.Tokens)
+			Q.LeadingWhite = J
+			Q.Line = M
+			Q.Char = N
+			Q.Print = function()
+				return "<" .. (Q.Type .. (" "):rep(7 - #Q.Type)) .. "  " .. (Q.Data or "") .. " >"
 			end
-			return true, aY
-		end
-		local bx = a({"end", "else", "elseif", "until"})
-		ai = function(ag)
-			local by = {}
-			by.Scope = ae(ag)
-			by.AstType = "Statlist"
-			by.Body = {}
-			by.Tokens = {}
-			while not bx[a1:Peek().Data] and not a1:IsEof() do
-				local n, bz = aX(by.Scope)
-				if not n then
-					return false, bz
-				end
-				by.Body[#by.Body + 1] = bz
+			b[#b + 1] = Q
+			if Q.Type == "Eof" then
+				break
 			end
-			if a1:IsEof() then
-				local bA = {}
-				bA.AstType = "Eof"
-				bA.Tokens = {a1:Get()}
-				by.Body[#by.Body + 1] = bA
-			end
-			return true, by
 		end
-		local function bB()
-			local bC = ae()
-			return ai(bC)
-		end
-		local n, bD = bB()
-		return n, bD
+	end)
+	if not c then
+		return false, d
 	end
-	return {
-		LexLua = k,
-		ParseLua = a8
+	local e = {}
+	local f = {}
+	local g = 1
+	function e:getp()
+		return g
+	end
+	function e:setp(lb)
+		g = lb
+	end
+	function e:getTokenList()
+		return b
+	end
+	function e:Peek(mb)
+		mb = mb or 0
+		return b[math.min(#b, g + mb)]
+	end
+	function e:Get(nb)
+		local ob = b[g]
+		g = math.min(g + 1, #b)
+		if nb then
+			table.insert(nb, ob)
+		end
+		return ob
+	end
+	function e:Is(pb)
+		return e:Peek().Type == pb
+	end
+	function e:Save()
+		f[#f + 1] = g
+	end
+	function e:Commit()
+		f[#f] = nil
+	end
+	function e:Restore()
+		g = f[#f]
+		f[#f] = nil
+	end
+	function e:ConsumeSymbol(qb, rb)
+		local sb = self:Peek()
+		if sb.Type == "Symbol" then
+			if qb then
+				if sb.Data == qb then
+					self:Get(rb)
+					return true
+				else
+					return nil
+				end
+			else
+				self:Get(rb)
+				return sb
+			end
+		else
+			return nil
+		end
+	end
+	function e:ConsumeKeyword(tb, ub)
+		local vb = self:Peek()
+		if vb.Type == "Keyword" and vb.Data == tb then
+			self:Get(ub)
+			return true
+		else
+			return nil
+		end
+	end
+	function e:IsKeyword(wb)
+		local xb = e:Peek()
+		return xb.Type == "Keyword" and xb.Data == wb
+	end
+	function e:IsSymbol(yb)
+		local zb = e:Peek()
+		return zb.Type == "Symbol" and zb.Data == yb
+	end
+	function e:IsEof()
+		return e:Peek().Type == "Eof"
+	end
+	return true, e
+end
+local function ParseLua(a)
+	local b, c
+	if type(a) ~= "table" then
+		b, c = LL(a)
+	else
+		b, c = true, a
+	end
+	if not b then
+		return false, c
+	end
+	local function d(v)
+		local w = ">> :" .. c:Peek().Line .. ":" .. c:Peek().Char .. ": " .. v .. "\n"
+		local x = 0
+		if type(a) == "string" then
+			for y in a:gmatch("[^\n]*\n?") do
+				if y:sub(-1, -1) == "\n" then
+					y = y:sub(1, -2)
+				end
+				x = x + 1
+				if x == c:Peek().Line then
+					w = w .. ">> `" .. y:gsub("\t", "\t") .. "`\n"
+					for z = 1, c:Peek().Char do
+						local A = y:sub(z, z)
+						if A == "\t" then
+							w = w .. "\t"
+						else
+							w = w .. " "
+						end
+					end
+					w = w .. "   ^^^^"
+					break
+				end
+			end
+		end
+		return w
+	end
+	local e = 0
+	local f = {"_", "a", "b", "c", "d"}
+	local function g(B)
+		local C = Scope:new(B)
+		C.RenameVars = C.ObfuscateLocals
+		C.ObfuscateVariables = C.ObfuscateLocals
+		C.BeautifyVars = C.BeautifyVariables
+		C.Print = function()
+			return "<Scope>"
+		end
+		return C
+	end
+	local h
+	local i
+	local j, k, l, m
+	local function n(D, E)
+		local F = g(D)
+		if not c:ConsumeSymbol("(", E) then
+			return false, d("`(` expected.")
+		end
+		local G = {}
+		local H = false
+		while not c:ConsumeSymbol(")", E) do
+			if c:Is("Ident") then
+				local K = F:CreateLocal(c:Get(E).Data)
+				G[#G + 1] = K
+				if not c:ConsumeSymbol(",", E) then
+					if c:ConsumeSymbol(")", E) then
+						break
+					else
+						return false, d("`)` expected.")
+					end
+				end
+			elseif c:ConsumeSymbol("...", E) then
+				H = true
+				if not c:ConsumeSymbol(")", E) then
+					return false, d("`...` must be the last argument of a function.")
+				end
+				break
+			else
+				return false, d("Argument name or `...` expected")
+			end
+		end
+		local b, I = i(F)
+		if not b then
+			return false, I
+		end
+		if not c:ConsumeKeyword("end", E) then
+			return false, d("`end` expected after function body")
+		end
+		local J = {}
+		J.AstType = "Function"
+		J.Scope = F
+		J.Arguments = G
+		J.Body = I
+		J.VarArg = H
+		J.Tokens = E
+		return true, J
+	end
+	function l(L)
+		local M = {}
+		if c:ConsumeSymbol("(", M) then
+			local b, N = h(L)
+			if not b then
+				return false, N
+			end
+			if not c:ConsumeSymbol(")", M) then
+				return false, d("`)` Expected.")
+			end
+			if false then
+				N.ParenCount = (N.ParenCount or 0) + 1
+				return true, N
+			else
+				local O = {}
+				O.AstType = "Parentheses"
+				O.Inner = N
+				O.Tokens = M
+				return true, O
+			end
+		elseif c:Is("Ident") then
+			local P = c:Get(M)
+			local Q = L:GetLocal(P.Data)
+			if not Q then
+				Q = L:GetGlobal(P.Data)
+				if not Q then
+					Q = L:CreateGlobal(P.Data)
+				else
+					Q.References = Q.References + 1
+				end
+			else
+				Q.References = Q.References + 1
+			end
+			local R = {}
+			R.AstType = "VarExpr"
+			R.Name = P.Data
+			R.Variable = Q
+			R.Tokens = M
+			return true, R
+		else
+			return false, d("primary expression expected")
+		end
+	end
+	function m(S, T)
+		local b, U = l(S)
+		if not b then
+			return false, U
+		end
+		while true do
+			local V = {}
+			if c:IsSymbol(".") or c:IsSymbol(":") then
+				local W = c:Get(V).Data
+				if not c:Is("Ident") then
+					return false, d("<Ident> expected.")
+				end
+				local X = c:Get(V)
+				local Y = {}
+				Y.AstType = "MemberExpr"
+				Y.Base = U
+				Y.Indexer = W
+				Y.Ident = X
+				Y.Tokens = V
+				U = Y
+			elseif not T and c:ConsumeSymbol("[", V) then
+				local b, Z = h(S)
+				if not b then
+					return false, Z
+				end
+				if not c:ConsumeSymbol("]", V) then
+					return false, d("`]` expected.")
+				end
+				local ab = {}
+				ab.AstType = "IndexExpr"
+				ab.Base = U
+				ab.Index = Z
+				ab.Tokens = V
+				U = ab
+			elseif not T and c:ConsumeSymbol("(", V) then
+				local bb = {}
+				while not c:ConsumeSymbol(")", V) do
+					local b, db = h(S)
+					if not b then
+						return false, db
+					end
+					bb[#bb + 1] = db
+					if not c:ConsumeSymbol(",", V) then
+						if c:ConsumeSymbol(")", V) then
+							break
+						else
+							return false, d("`)` Expected.")
+						end
+					end
+				end
+				local cb = {}
+				cb.AstType = "CallExpr"
+				cb.Base = U
+				cb.Arguments = bb
+				cb.Tokens = V
+				U = cb
+			elseif not T and c:Is("string") then
+				local eb = {}
+				eb.AstType = "StringCallExpr"
+				eb.Base = U
+				eb.Arguments = {c:Get(V)}
+				eb.Tokens = V
+				U = eb
+			elseif not T and c:IsSymbol("{") then
+				local b, fb = j(S)
+				if not b then
+					return false, fb
+				end
+				local gb = {}
+				gb.AstType = "TableCallExpr"
+				gb.Base = U
+				gb.Arguments = {fb}
+				gb.Tokens = V
+				U = gb
+			else
+				break
+			end
+		end
+		return true, U
+	end
+	function j(hb)
+		local ib = {}
+		if c:Is("Number") then
+			local jb = {}
+			jb.AstType = "NumberExpr"
+			jb.Value = c:Get(ib)
+			jb.Tokens = ib
+			return true, jb
+		elseif c:Is("string") then
+			local kb = {}
+			kb.AstType = "StringExpr"
+			kb.Value = c:Get(ib)
+			kb.Tokens = ib
+			return true, kb
+		elseif c:ConsumeKeyword("nil", ib) then
+			local lb = {}
+			lb.AstType = "NilExpr"
+			lb.Tokens = ib
+			return true, lb
+		elseif c:IsKeyword("false") or c:IsKeyword("true") then
+			local mb = {}
+			mb.AstType = "BooleanExpr"
+			mb.Value = c:Get(ib).Data == "true"
+			mb.Tokens = ib
+			return true, mb
+		elseif c:ConsumeSymbol("...", ib) then
+			local nb = {}
+			nb.AstType = "DotsExpr"
+			nb.Tokens = ib
+			return true, nb
+		elseif c:ConsumeSymbol("{", ib) then
+			local ob = {}
+			ob.AstType = "ConstructorExpr"
+			ob.EntryList = {}
+			while true do
+				if c:IsSymbol("[", ib) then
+					c:Get(ib)
+					local b, pb = h(hb)
+					if not b then
+						return false, d("Key Expression Expected")
+					end
+					if not c:ConsumeSymbol("]", ib) then
+						return false, d("`]` Expected")
+					end
+					if not c:ConsumeSymbol("=", ib) then
+						return false, d("`=` Expected")
+					end
+					local b, qb = h(hb)
+					if not b then
+						return false, d("Value Expression Expected")
+					end
+					ob.EntryList[#ob.EntryList + 1] = {
+						Type = "Key",
+						Key = pb,
+						Value = qb
+					}
+				elseif c:Is("Ident") then
+					local rb = c:Peek(1)
+					if rb.Type == "Symbol" and rb.Data == "=" then
+						local sb = c:Get(ib)
+						if not c:ConsumeSymbol("=", ib) then
+							return false, d("`=` Expected")
+						end
+						local b, tb = h(hb)
+						if not b then
+							return false, d("Value Expression Expected")
+						end
+						ob.EntryList[#ob.EntryList + 1] = {
+							Type = "KeyString",
+							Key = sb.Data,
+							Value = tb
+						}
+					else
+						local b, ub = h(hb)
+						if not b then
+							return false, d("Value Exected")
+						end
+						ob.EntryList[#ob.EntryList + 1] = {
+							Type = "Value",
+							Value = ub
+						}
+					end
+				elseif c:ConsumeSymbol("}", ib) then
+					break
+				else
+					local b, vb = h(hb)
+					ob.EntryList[#ob.EntryList + 1] = {
+						Type = "Value",
+						Value = vb
+					}
+					if not b then
+						return false, d("Value Expected")
+					end
+				end
+				if c:ConsumeSymbol(";", ib) or c:ConsumeSymbol(",", ib) then
+				elseif c:ConsumeSymbol("}", ib) then
+					break
+				else
+					return false, d("`}` or table entry Expected")
+				end
+			end
+			ob.Tokens = ib
+			return true, ob
+		elseif c:ConsumeKeyword("function", ib) then
+			local b, wb = n(hb, ib)
+			if not b then
+				return false, wb
+			end
+			wb.IsLocal = true
+			return true, wb
+		else
+			return m(hb)
+		end
+	end
+	local o = toDictionary({"-", "not", "#"})
+	local p = 8
+	local q = {
+		["+"] = {6, 6},
+		["-"] = {6, 6},
+		["%"] = {7, 7},
+		["/"] = {7, 7},
+		["*"] = {7, 7},
+		["^"] = {10, 9},
+		[".."] = {5, 4},
+		["=="] = {3, 3},
+		["<"] = {3, 3},
+		["<="] = {3, 3},
+		["~="] = {3, 3},
+		[">"] = {3, 3},
+		[">="] = {3, 3},
+		["and"] = {2, 2},
+		["or"] = {1, 1}
 	}
-end)()
-local function fixnum(a)
-	a = tostring(tonumber(a))
-	local n = a:sub(1, 1) == "-"
-	if n then
-		a = a:sub(2)
+	function k(xb, yb)
+		local b, zb
+		if o[c:Peek().Data] then
+			local Ab = {}
+			local Bb = c:Get(Ab).Data
+			b, zb = k(xb, p)
+			if not b then
+				return false, zb
+			end
+			local Cb = {}
+			Cb.AstType = "UnopExpr"
+			Cb.Rhs = zb
+			Cb.Op = Bb
+			Cb.OperatorPrecedence = p
+			Cb.Tokens = Ab
+			zb = Cb
+		else
+			b, zb = j(xb)
+			if not b then
+				return false, zb
+			end
+		end
+		while true do
+			local Db = q[c:Peek().Data]
+			if Db and Db[1] > yb then
+				local Eb = {}
+				local Fb = c:Get(Eb).Data
+				local b, Gb = k(xb, Db[2])
+				if not b then
+					return false, Gb
+				end
+				local Hb = {}
+				Hb.AstType = "BinopExpr"
+				Hb.Lhs = zb
+				Hb.Op = Fb
+				Hb.OperatorPrecedence = Db[1]
+				Hb.Rhs = Gb
+				Hb.Tokens = Eb
+				zb = Hb
+			else
+				break
+			end
+		end
+		return true, zb
 	end
-	if a:sub(1, 2) == "0." then
-		a = a:sub(2)
-	elseif a:match("%d+") == a then
-		a = tonumber(a)
-		a = a <= 9 and a or ("0x%x"):format(a)
+	h = function(Ib)
+		return k(Ib, 0)
 	end
-	return n and "-" .. a or a
+	local function r(Jb)
+		local Kb = nil
+		local Lb = {}
+		if c:ConsumeKeyword("if", Lb) then
+			local Mb = {}
+			Mb.AstType = "IfStatement"
+			Mb.Clauses = {}
+			repeat
+				local b, Nb = h(Jb)
+				if not b then
+					return false, Nb
+				end
+				if not c:ConsumeKeyword("then", Lb) then
+					return false, d("`then` expected.")
+				end
+				local b, Ob = i(Jb)
+				if not b then
+					return false, Ob
+				end
+				Mb.Clauses[#Mb.Clauses + 1] = {
+					Condition = Nb,
+					Body = Ob
+				}
+			until not c:ConsumeKeyword("elseif", Lb)
+			if c:ConsumeKeyword("else", Lb) then
+				local b, Pb = i(Jb)
+				if not b then
+					return false, Pb
+				end
+				Mb.Clauses[#Mb.Clauses + 1] = {
+					Body = Pb
+				}
+			end
+			if not c:ConsumeKeyword("end", Lb) then
+				return false, d("`end` expected.")
+			end
+			Mb.Tokens = Lb
+			Kb = Mb
+		elseif c:ConsumeKeyword("while", Lb) then
+			local Qb = {}
+			Qb.AstType = "WhileStatement"
+			local b, Rb = h(Jb)
+			if not b then
+				return false, Rb
+			end
+			if not c:ConsumeKeyword("do", Lb) then
+				return false, d("`do` expected.")
+			end
+			local b, Sb = i(Jb)
+			if not b then
+				return false, Sb
+			end
+			if not c:ConsumeKeyword("end", Lb) then
+				return false, d("`end` expected.")
+			end
+			Qb.Condition = Rb
+			Qb.Body = Sb
+			Qb.Tokens = Lb
+			Kb = Qb
+		elseif c:ConsumeKeyword("do", Lb) then
+			local b, Tb = i(Jb)
+			if not b then
+				return false, Tb
+			end
+			if not c:ConsumeKeyword("end", Lb) then
+				return false, d("`end` expected.")
+			end
+			local Ub = {}
+			Ub.AstType = "DoStatement"
+			Ub.Body = Tb
+			Ub.Tokens = Lb
+			Kb = Ub
+		elseif c:ConsumeKeyword("for", Lb) then
+			if not c:Is("Ident") then
+				return false, d("<ident> expected.")
+			end
+			local Vb = c:Get(Lb)
+			if c:ConsumeSymbol("=", Lb) then
+				local Wb = g(Jb)
+				local Xb = Wb:CreateLocal(Vb.Data)
+				local b, Yb = h(Jb)
+				if not b then
+					return false, Yb
+				end
+				if not c:ConsumeSymbol(",", Lb) then
+					return false, d("`,` Expected")
+				end
+				local b, Zb = h(Jb)
+				if not b then
+					return false, Zb
+				end
+				local b, ac
+				if c:ConsumeSymbol(",", Lb) then
+					b, ac = h(Jb)
+					if not b then
+						return false, ac
+					end
+				end
+				if not c:ConsumeKeyword("do", Lb) then
+					return false, d("`do` expected")
+				end
+				local b, bc = i(Wb)
+				if not b then
+					return false, bc
+				end
+				if not c:ConsumeKeyword("end", Lb) then
+					return false, d("`end` expected")
+				end
+				local cc = {}
+				cc.AstType = "NumericForStatement"
+				cc.Scope = Wb
+				cc.Variable = Xb
+				cc.Start = Yb
+				cc.End = Zb
+				cc.Step = ac
+				cc.Body = bc
+				cc.Tokens = Lb
+				Kb = cc
+			else
+				local dc = g(Jb)
+				local ec = {dc:CreateLocal(Vb.Data)}
+				while c:ConsumeSymbol(",", Lb) do
+					if not c:Is("Ident") then
+						return false, d("for variable expected.")
+					end
+					ec[#ec + 1] = dc:CreateLocal(c:Get(Lb).Data)
+				end
+				if not c:ConsumeKeyword("in", Lb) then
+					return false, d("`in` expected.")
+				end
+				local fc = {}
+				local b, gc = h(Jb)
+				if not b then
+					return false, gc
+				end
+				fc[#fc + 1] = gc
+				while c:ConsumeSymbol(",", Lb) do
+					local b, jc = h(Jb)
+					if not b then
+						return false, jc
+					end
+					fc[#fc + 1] = jc
+				end
+				if not c:ConsumeKeyword("do", Lb) then
+					return false, d("`do` expected.")
+				end
+				local b, hc = i(dc)
+				if not b then
+					return false, hc
+				end
+				if not c:ConsumeKeyword("end", Lb) then
+					return false, d("`end` expected.")
+				end
+				local ic = {}
+				ic.AstType = "GenericForStatement"
+				ic.Scope = dc
+				ic.VariableList = ec
+				ic.Generators = fc
+				ic.Body = hc
+				ic.Tokens = Lb
+				Kb = ic
+			end
+		elseif c:ConsumeKeyword("repeat", Lb) then
+			local b, kc = i(Jb)
+			if not b then
+				return false, kc
+			end
+			if not c:ConsumeKeyword("until", Lb) then
+				return false, d("`until` expected.")
+			end
+			local b, lc = h(kc.Scope)
+			if not b then
+				return false, lc
+			end
+			local mc = {}
+			mc.AstType = "RepeatStatement"
+			mc.Condition = lc
+			mc.Body = kc
+			mc.Tokens = Lb
+			Kb = mc
+		elseif c:ConsumeKeyword("function", Lb) then
+			if not c:Is("Ident") then
+				return false, d("Function name expected")
+			end
+			local b, nc = m(Jb, true)
+			if not b then
+				return false, nc
+			end
+			local b, oc = n(Jb, Lb)
+			if not b then
+				return false, oc
+			end
+			oc.IsLocal = false
+			oc.Name = nc
+			Kb = oc
+		elseif c:ConsumeKeyword("local", Lb) then
+			if c:Is("Ident") then
+				local pc = {c:Get(Lb).Data}
+				while c:ConsumeSymbol(",", Lb) do
+					if not c:Is("Ident") then
+						return false, d("local var name expected")
+					end
+					pc[#pc + 1] = c:Get(Lb).Data
+				end
+				local qc = {}
+				if c:ConsumeSymbol("=", Lb) then
+					repeat
+						local b, sc = h(Jb)
+						if not b then
+							return false, sc
+						end
+						qc[#qc + 1] = sc
+					until not c:ConsumeSymbol(",", Lb)
+				end
+				for tc, uc in pairs(pc) do
+					pc[tc] = Jb:CreateLocal(uc)
+				end
+				local rc = {}
+				rc.AstType = "LocalStatement"
+				rc.LocalList = pc
+				rc.InitList = qc
+				rc.Tokens = Lb
+				Kb = rc
+			elseif c:ConsumeKeyword("function", Lb) then
+				if not c:Is("Ident") then
+					return false, d("Function name expected")
+				end
+				local vc = c:Get(Lb).Data
+				local wc = Jb:CreateLocal(vc)
+				local b, xc = n(Jb, Lb)
+				if not b then
+					return false, xc
+				end
+				xc.Name = wc
+				xc.IsLocal = true
+				Kb = xc
+			else
+				return false, d("local var or function def expected")
+			end
+		elseif c:ConsumeSymbol("::", Lb) then
+			if not c:Is("Ident") then
+				return false, d("Label name expected")
+			end
+			local yc = c:Get(Lb).Data
+			if not c:ConsumeSymbol("::", Lb) then
+				return false, d("`::` expected")
+			end
+			local zc = {}
+			zc.AstType = "LabelStatement"
+			zc.Label = yc
+			zc.Tokens = Lb
+			Kb = zc
+		elseif c:ConsumeKeyword("return", Lb) then
+			local Ac = {}
+			if not c:IsKeyword("end") then
+				local b, Cc = h(Jb)
+				if b then
+					Ac[1] = Cc
+					while c:ConsumeSymbol(",", Lb) do
+						local b, Dc = h(Jb)
+						if not b then
+							return false, Dc
+						end
+						Ac[#Ac + 1] = Dc
+					end
+				end
+			end
+			local Bc = {}
+			Bc.AstType = "ReturnStatement"
+			Bc.Arguments = Ac
+			Bc.Tokens = Lb
+			Kb = Bc
+		elseif c:ConsumeKeyword("break", Lb) then
+			local Ec = {}
+			Ec.AstType = "BreakStatement"
+			Ec.Tokens = Lb
+			Kb = Ec
+		elseif c:ConsumeKeyword("continue", Lb) then
+			local Fc = {}
+			Fc.AstType = "ContinueStatement"
+			Fc.Tokens = Lb
+			Kb = Fc
+		else
+			local b, Gc = m(Jb)
+			if not b then
+				return false, Gc
+			end
+			if c:IsSymbol(",") or c:IsSymbol("=") then
+				if (Gc.ParenCount or 0) > 0 then
+					return false, d("Can not assign to parenthesized expression, is not an lvalue")
+				end
+				local Hc = {Gc}
+				while c:ConsumeSymbol(",", Lb) do
+					local b, Lc = m(Jb)
+					if not b then
+						return false, Lc
+					end
+					Hc[#Hc + 1] = Lc
+				end
+				if not c:ConsumeSymbol("=", Lb) then
+					return false, d("`=` Expected.")
+				end
+				local Ic = {}
+				local b, Jc = h(Jb)
+				if not b then
+					return false, Jc
+				end
+				Ic[1] = Jc
+				while c:ConsumeSymbol(",", Lb) do
+					local b, Mc = h(Jb)
+					if not b then
+						return false, Mc
+					end
+					Ic[#Ic + 1] = Mc
+				end
+				local Kc = {}
+				Kc.AstType = "AssignmentStatement"
+				Kc.Lhs = Hc
+				Kc.Rhs = Ic
+				Kc.Tokens = Lb
+				Kb = Kc
+			elseif Gc.AstType == "CallExpr" or Gc.AstType == "TableCallExpr" or Gc.AstType == "StringCallExpr" then
+				local Nc = {}
+				Nc.AstType = "CallStatement"
+				Nc.Expression = Gc
+				Nc.Tokens = Lb
+				Kb = Nc
+			else
+				return false, d("Assignment Statement Expected")
+			end
+		end
+		if c:IsSymbol(";") then
+			Kb.Semicolon = c:Get(Kb.Tokens)
+		end
+		return true, Kb
+	end
+	local s = toDictionary({"end", "else", "elseif", "until"})
+	i = function(Oc)
+		local Pc = {}
+		Pc.Scope = g(Oc)
+		Pc.AstType = "Statlist"
+		Pc.Body = {}
+		Pc.Tokens = {}
+		while not s[c:Peek().Data] and not c:IsEof() do
+			local b, Qc = r(Pc.Scope)
+			if not b then
+				return false, Qc
+			end
+			Pc.Body[#Pc.Body + 1] = Qc
+		end
+		if c:IsEof() then
+			local Rc = {}
+			Rc.AstType = "Eof"
+			Rc.Tokens = {c:Get()}
+			Pc.Body[#Pc.Body + 1] = Rc
+		end
+		return true, Pc
+	end
+	local function t()
+		local Sc = g()
+		return i(Sc)
+	end
+	local b, u = t()
+	return b, u
 end
 local Legends = {
 	["\\"] = "\\\\",
@@ -1576,384 +1463,373 @@ local Legends = {
 	["\v"] = "\\v",
 	["\""] = "\\\""
 }
+local function fixnum(a)
+	a = tostring(tonumber(a))
+	local b = a:sub(1, 1) == "-"
+	if b then
+		a = a:sub(2)
+	end
+	if a:sub(1, 2) == "0." then
+		a = a:sub(2)
+	elseif a:match("%d+") == a then
+		a = tonumber(a)
+		a = a <= 9 and a or ("0x%x"):format(a)
+	end
+	return b and "-" .. a or a
+end
 local function fixstr(a)
-	return "\"" .. (loadstring("return " .. a)():gsub(".", function(x)
-		return "\\" .. x:byte()
+	return "\"" .. (loadstring("return " .. a)():gsub(".", function(b)
+		return "\\" .. b:byte()
 	end)) .. "\""
 end
-local Format = (function()
-	local a = ParseLua.ParseLua
-	local b = Util.lookupify
-	local d = b({"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"})
-	local e = b({"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"})
-	local f = b({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
-	local function g(h, i, ripvon)
-		local j, k
-		local l, m = 0, "\n"
-		local function o(p, q, r)
-			r = r or ""
-			local s, t = p:sub(-1, -1), q:sub(1, 1)
-			if e[s] or d[s] or s == "_" then
-				if not (e[t] or d[t] or t == "_" or f[t]) then
-					return p .. q
-				elseif t == "(" then
-					return p .. r .. q
-				else
-					return p .. r .. q
-				end
-			elseif f[s] then
-				if t == "(" then
-					return p .. q
-				else
-					return p .. r .. q
-				end
-			elseif s == "" then
-				return p .. q
+local function Format(a, b, c)
+	localCount = 0
+	local k, i, d, j = 0, "\n", false, false
+	local function f(l, m, n)
+		n = n or ""
+		local o, p = l:sub(-1, -1), m:sub(1, 1)
+		if LettersU[o] or LettersL[o] or o == "_" then
+			if not (LettersU[p] or LettersL[p] or p == "_" or Numbers[p]) then
+				return l .. m
+			elseif p == "(" then
+				return l .. n .. m
 			else
-				if t == "(" then
-					return p .. r .. q
-				else
-					return p .. q
-				end
+				return l .. n .. m
+			end
+		elseif Numbers[o] then
+			if p == "(" then
+				return l .. m
+			else
+				return l .. n .. m
+			end
+		elseif o == "" then
+			return l .. m
+		else
+			if p == "(" then
+				return l .. n .. m
+			else
+				return l .. m
 			end
 		end
-		local Cases = {
-			Function = "ARG_",
-			NumericForStatement = "FOR_",
-			GenericForStatement = "FOR_",
-			Statlist = ""
-		}
-		local cache = {}
-		local function Rename(v, x)
-			if i and not cache[v] then
-				cache[v] = true
-				v.Scope:BeautifyVars(Cases[v.AstType] or "")
-			end
-		end
-		k = function(u)
-			if i and u.Scope then
-				Rename(u)
-			end
-			local v = ("("):rep(u.ParenCount or 0)
-			if u.AstType == "VarExpr" then
-				if u.Variable then
-					v = v .. u.Variable.Name
-				else
-					v = v .. u.Name
-				end
-			elseif u.AstType == "NumberExpr" then
-				v = v .. fixnum(u.Value.Data)
-			elseif u.AstType == "StringExpr" then
-				v = v .. fixstr(u.Value.Data)
-			elseif u.AstType == "BooleanExpr" then
-				v = v .. tostring(u.Value)
-			elseif u.AstType == "NilExpr" then
-				v = o(v, "nil")
-			elseif u.AstType == "BinopExpr" then
-				v = o(v, k(u.Lhs)) .. " "
-				v = o(v, u.Op) .. " "
-				v = o(v, k(u.Rhs))
-			elseif u.AstType == "UnopExpr" then
-				v = o(v, u.Op) .. (#u.Op ~= 1 and " " or "")
-				v = o(v, k(u.Rhs))
-			elseif u.AstType == "DotsExpr" then
-				v = v .. "..."
-			elseif u.AstType == "CallExpr" then
-				v = v .. k(u.Base)
-				if ripvon and #u.Arguments == 1 and (u.Arguments[1].AstType == "StringExpr" or u.Arguments[1].AstType == "ConstructorExpr") then
-					v = v .. k(u.Arguments[1])
-				else
-					v = v .. "("
-					for i1, v1 in ipairs(u.Arguments) do
-						v = v .. k(v1)
-						if i1 ~= #u.Arguments then
-							v = v .. ", "
-						end
-					end
-					v = v .. ")"
-				end
-			elseif u.AstType == "TableCallExpr" then
-				if ripvon then
-					v = v .. k(u.Base) .. k(u.Arguments[1])
-				else
-					v = v .. k(u.Base) .. "("
-					v = v .. k(u.Arguments[1]) .. ")"
-				end
-			elseif u.AstType == "StringCallExpr" then
-				if ripvon then
-					v = v .. k(u.Base) .. fixstr(u.Arguments[1].Data)
-				else
-					v = v .. k(u.Base) .. "("
-					v = v .. fixstr(u.Arguments[1].Data) .. ")"
-				end
-			elseif u.AstType == "IndexExpr" then
-				v = v .. k(u.Base) .. "[" .. k(u.Index) .. "]"
-			elseif u.AstType == "MemberExpr" then
-				v = v .. k(u.Base) .. u.Indexer .. u.Ident.Data
-			elseif u.AstType == "Function" then
-				v = v .. "function("
-				if #u.Arguments > 0 then
-				for i1, v1 in ipairs(u.Arguments) do
-					v = v .. v1.Name
-					if i1 ~= #u.Arguments then
-						v = v .. ", "
-					elseif u.VarArg then
-						v = v .. ", ..."
-					end
-				end
-				elseif u.VarArg then
-					v = v .. "..."
-				end
-				v = v .. ")" .. m
-				l = l + 1
-				v = o(v, j(u.Body))
-				l = l - 1
-				v = o(v, ("\t"):rep(l) .. "end")
-			elseif u.AstType == "ConstructorExpr" then
-				v = v .. "{"
-				local itsanarray = (function()
-					for _, v1 in ipairs(u.EntryList) do
-						if v1.Type == "Key" or v1.Type == "KeyString" then
-							return false
-						end
-					end
-					return true
-				end)()
-				local x, y, z = false, false, false
-				for i1, v1 in ipairs(u.EntryList) do
-					x, y = v1.Type == "Key" or v1.Type == "KeyString", x
-					l = l + (itsanarray and 0 or 1)
-					if x or z then
-						z = x
-						if not y then
-							v = v .. "\n"
-						end
-						v = v .. ("\t"):rep(l)
-					end
-					if v1.Type == "Key" then
-						v = v .. "[" .. k(v1.Key) .. "] = " .. k(v1.Value)
-					elseif v1.Type == "Value" then
-						v = v .. k(v1.Value)
-					elseif v1.Type == "KeyString" then
-						v = v .. v1.Key .. " = " .. k(v1.Value)
-					end
-					if i1 ~= #u.EntryList then
-						v = v .. ","
-						if not x then
-							v = v .. " "
-						end
-					end
-					if x then
-						v = v .. "\n"
-					end
-					l = l - (itsanarray and 0 or 1)
-				end
-				if #u.EntryList > 0 and x then
-					v = v .. ("\t"):rep(l)
-				end
-				v = v .. "}"
-			elseif u.AstType == "Parentheses" then
-				v = v .. "(" .. k(u.Inner) .. ")"
-			end
-			v = v .. (")"):rep(u.ParenCount or 0)
-			return v
-		end
-		local B = function(C)
-			if i and C.Scope then
-				Rename(C)
-			end
-			local v = ""
-			if C.AstType == "AssignmentStatement" then
-				v = ("\t"):rep(l)
-				for w = 1, #C.Lhs do
-					v = v .. k(C.Lhs[w])
-					if w ~= #C.Lhs then
-						v = v .. ", "
-					end
-				end
-				if #C.Rhs > 0 then
-					v = v .. " = "
-					for w = 1, #C.Rhs do
-						v = v .. k(C.Rhs[w])
-						if w ~= #C.Rhs then
-							v = v .. ", "
-						end
-					end
-				end
-			elseif C.AstType == "CallStatement" then
-				v = ("\t"):rep(l) .. k(C.Expression)
-			elseif C.AstType == "LocalStatement" then
-				v = ("\t"):rep(l) .. v .. "local "
-				for w = 1, #C.LocalList do
-					v = v .. C.LocalList[w].Name
-					if w ~= #C.LocalList then
-						v = v .. ", "
-					end
-				end
-				if #C.InitList > 0 then
-					v = v .. " = "
-					for w = 1, #C.InitList do
-						v = v .. k(C.InitList[w])
-						if w ~= #C.InitList then
-							v = v .. ", "
-						end
-					end
-				end
-			elseif C.AstType == "IfStatement" then
-				v = ("\t"):rep(l) .. o("if ", k(C.Clauses[1].Condition))
-				v = o(v, " then") .. m
-				l = l + 1
-				v = o(v, j(C.Clauses[1].Body))
-				l = l - 1
-				for w = 2, #C.Clauses do
-					local D = C.Clauses[w]
-					if D.Condition then
-						v = o(v, ("\t"):rep(l) .. "elseif ")
-						v = o(v, k(D.Condition))
-						v = o(v, " then") .. m
-					else
-						v = o(v, ("\t"):rep(l) .. "else") .. m
-					end
-					l = l + 1
-					v = o(v, j(D.Body))
-					l = l - 1
-				end
-				v = o(v, ("\t"):rep(l) .. "end")
-			elseif C.AstType == "WhileStatement" then
-				v = ("\t"):rep(l) .. o("while ", k(C.Condition))
-				v = o(v, " do") .. m
-				l = l + 1
-				v = o(v, j(C.Body))
-				l = l - 1
-				v = o(v, ("\t"):rep(l) .. "end")
-			elseif C.AstType == "DoStatement" then
-				v = ("\t"):rep(l) .. o(v, "do") .. m
-				l = l + 1
-				v = o(v, j(C.Body))
-				l = l - 1
-				v = o(v, ("\t"):rep(l) .. "end")
-			elseif C.AstType == "ReturnStatement" then
-				v = ("\t"):rep(l) .. "return "
-				for w = 1, #C.Arguments do
-					v = o(v, k(C.Arguments[w]))
-					if w ~= #C.Arguments then
-						v = v .. ", "
-					end
-				end
-			elseif C.AstType == "BreakStatement" then
-				v = ("\t"):rep(l) .. "break"
-			elseif C.AstType == "ContinueStatement" then
-				v = ("\t"):rep(l) .. "continue"
-			elseif C.AstType == "RepeatStatement" then
-				v = ("\t"):rep(l) .. "repeat" .. m
-				l = l + 1
-				v = o(v, j(C.Body))
-				l = l - 1
-				v = o(v, ("\t"):rep(l) .. "until ")
-				v = o(v, k(C.Condition))
-			elseif C.AstType == "Function" then
-				if C.IsLocal then
-					v = "local "
-				end
-				v = o(v, "function ")
-				v = ("\t"):rep(l) .. v
-				if C.IsLocal then
-					v = v .. C.Name.Name
-				else
-					v = v .. k(C.Name)
-				end
-				v = v .. "("
-				if #C.Arguments > 0 then
-					for w = 1, #C.Arguments do
-						v = v .. C.Arguments[w].Name
-						if w ~= #C.Arguments then
-							v = v .. ", "
-						elseif C.VarArg then
-							v = v .. ", ..."
-						end
-					end
-				elseif C.VarArg then
-					v = v .. "..."
-				end
-				v = v .. ")" .. m
-				l = l + 1
-				v = o(v, j(C.Body))
-				l = l - 1
-				v = o(v, ("\t"):rep(l) .. "end")
-			elseif C.AstType == "GenericForStatement" then
-				v = ("\t"):rep(l) .. "for "
-				for w = 1, #C.VariableList do
-					v = v .. C.VariableList[w].Name
-					if w ~= #C.VariableList then
-						v = v .. ", "
-					end
-				end
-				v = v .. " in "
-				for w = 1, #C.Generators do
-					v = o(v, k(C.Generators[w]))
-					if w ~= #C.Generators then
-						v = o(v, ", ")
-					end
-				end
-				v = o(v, " do") .. m
-				l = l + 1
-				v = o(v, j(C.Body))
-				l = l - 1
-				v = o(v, ("\t"):rep(l) .. "end")
-			elseif C.AstType == "NumericForStatement" then
-				v = ("\t"):rep(l) .. "for "
-				v = v .. C.Variable.Name .. " = "
-				v = v .. k(C.Start) .. ", " .. k(C.End)
-				if C.Step then
-					v = v .. ", " .. k(C.Step)
-				end
-				v = o(v, " do") .. m
-				l = l + 1
-				v = o(v, j(C.Body))
-				l = l - 1
-				v = o(v, ("\t"):rep(l) .. "end")
-			elseif C.AstType == "LabelStatement" then
-				v = ("\t"):rep(l) .. "::" .. C.Label .. "::" .. m
-			elseif C.AstType == "GotoStatement" then
-				v = ("\t"):rep(l) .. "goto " .. C.Label .. m
-			elseif C.AstType == "Comment" then
-				if C.CommentType == "Shebang" then
-					v = ("\t"):rep(l) .. C.Data
-				elseif C.CommentType == "Comment" then
-					v = ("\t"):rep(l) .. C.Data
-				elseif C.CommentType == "LongComment" then
-					v = ("\t"):rep(l) .. C.Data
-				end
-			elseif C.AstType ~= "Eof" then
-				print("Unknown AST Type: ", C.AstType)
-			end
-			return v
-		end
-		j = function(E)
-			local v = ""
-			Rename(E)
-			for F, G in pairs(E.Body) do
-				v = o(v, B(G) .. m)
-			end
-			return v
-		end
-		Rename(h)
-		return (Util.stripstr(j(h)))
 	end
-	return g
-end)()
+	local g = {}
+	local function h(q)
+		if b and not g[q] then
+			g[q] = true
+			q.Scope:BeautifyVars()
+		end
+	end
+	local function e(r)
+		if b and r.Scope then
+			h(r)
+		end
+		local s = ("("):rep(r.ParenCount or 0)
+		if r.AstType == "VarExpr" then
+			if r.Variable then
+				s = s .. r.Variable.Name
+			else
+				s = s .. r.Name
+			end
+		elseif r.AstType == "NumberExpr" then
+			s = s .. fixnum(r.Value.Data)
+		elseif r.AstType == "StringExpr" then
+			s = s .. fixstr(r.Value.Data)
+		elseif r.AstType == "BooleanExpr" then
+			s = s .. tostring(r.Value)
+		elseif r.AstType == "NilExpr" then
+			s = f(s, "nil")
+		elseif r.AstType == "BinopExpr" then
+			s = f(s, e(r.Lhs)) .. " "
+			s = f(s, r.Op) .. " "
+			s = f(s, e(r.Rhs))
+		elseif r.AstType == "UnopExpr" then
+			s = f(s, r.Op) .. (#r.Op ~= 1 and " " or "")
+			s = f(s, e(r.Rhs))
+		elseif r.AstType == "DotsExpr" then
+			s = s .. "..."
+		elseif r.AstType == "CallExpr" then
+			s = s .. e(r.Base)
+			if c and #r.Arguments == 1 and (r.Arguments[1].AstType == "StringExpr" or r.Arguments[1].AstType == "ConstructorExpr") then
+				s = s .. e(r.Arguments[1])
+			else
+				s = s .. "("
+				for t, u in ipairs(r.Arguments) do
+					s = s .. e(u)
+					if t ~= #r.Arguments then
+						s = s .. ", "
+					end
+				end
+				s = s .. ")"
+			end
+		elseif r.AstType == "TableCallExpr" then
+			if c then
+				s = s .. e(r.Base) .. e(r.Arguments[1])
+			else
+				s = s .. e(r.Base) .. "("
+				s = s .. e(r.Arguments[1]) .. ")"
+			end
+		elseif r.AstType == "StringCallExpr" then
+			if c then
+				s = s .. e(r.Base) .. fixstr(r.Arguments[1].Data)
+			else
+				s = s .. e(r.Base) .. "("
+				s = s .. fixstr(r.Arguments[1].Data) .. ")"
+			end
+		elseif r.AstType == "IndexExpr" then
+			s = s .. e(r.Base) .. "[" .. e(r.Index) .. "]"
+		elseif r.AstType == "MemberExpr" then
+			s = s .. e(r.Base) .. r.Indexer .. r.Ident.Data
+		elseif r.AstType == "Function" then
+			s = s .. "function("
+			if #r.Arguments > 0 then
+				for v, w in ipairs(r.Arguments) do
+					s = s .. w.Name
+					if v ~= #r.Arguments then
+						s = s .. ", "
+					elseif r.VarArg then
+						s = s .. ", ..."
+					end
+				end
+			elseif r.VarArg then
+				s = s .. "..."
+			end
+			s = s .. ")" .. i
+			k = k + 1
+			s = f(s, d(r.Body))
+			k = k - 1
+			s = f(s, ("\t"):rep(k) .. "end")
+		elseif r.AstType == "ConstructorExpr" then
+			s = s .. "{"
+			local A = (function()
+				for B, C in ipairs(r.EntryList) do
+					if C.Type == "Key" or C.Type == "KeyString" then
+						return false
+					end
+				end
+				return true
+			end)()
+			local x, y, z = false, false, false
+			for D, E in ipairs(r.EntryList) do
+				x, y = E.Type == "Key" or E.Type == "KeyString", x
+				k = k + (A and 0 or 1)
+				if x or z then
+					z = x
+					if not y then
+						s = s .. "\n"
+					end
+					s = s .. ("\t"):rep(k)
+				end
+				if E.Type == "Key" then
+					s = s .. "[" .. e(E.Key) .. "] = " .. e(E.Value)
+				elseif E.Type == "Value" then
+					s = s .. e(E.Value)
+				elseif E.Type == "KeyString" then
+					s = s .. E.Key .. " = " .. e(E.Value)
+				end
+				if D ~= #r.EntryList then
+					s = s .. ","
+					if not x then
+						s = s .. " "
+					end
+				end
+				if x then
+					s = s .. "\n"
+				end
+				k = k - (A and 0 or 1)
+			end
+			if #r.EntryList > 0 and x then
+				s = s .. ("\t"):rep(k)
+			end
+			s = s .. "}"
+		elseif r.AstType == "Parentheses" then
+			s = s .. "(" .. e(r.Inner) .. ")"
+		end
+		s = s .. (")"):rep(r.ParenCount or 0)
+		return s
+	end
+	function j(F)
+		if b and F.Scope then
+			h(F)
+		end
+		local G = ""
+		if F.AstType == "AssignmentStatement" then
+			G = ("\t"):rep(k)
+			for H = 1, #F.Lhs do
+				G = G .. e(F.Lhs[H])
+				if H ~= #F.Lhs then
+					G = G .. ", "
+				end
+			end
+			if #F.Rhs > 0 then
+				G = G .. " = "
+				for I = 1, #F.Rhs do
+					G = G .. e(F.Rhs[I])
+					if I ~= #F.Rhs then
+						G = G .. ", "
+					end
+				end
+			end
+		elseif F.AstType == "CallStatement" then
+			G = ("\t"):rep(k) .. e(F.Expression)
+		elseif F.AstType == "LocalStatement" then
+			G = ("\t"):rep(k) .. G .. "local "
+			for J = 1, #F.LocalList do
+				G = G .. F.LocalList[J].Name
+				if J ~= #F.LocalList then
+					G = G .. ", "
+				end
+			end
+			if #F.InitList > 0 then
+				G = G .. " = "
+				for K = 1, #F.InitList do
+					G = G .. e(F.InitList[K])
+					if K ~= #F.InitList then
+						G = G .. ", "
+					end
+				end
+			end
+		elseif F.AstType == "IfStatement" then
+			G = ("\t"):rep(k) .. f("if ", e(F.Clauses[1].Condition))
+			G = f(G, " then") .. i
+			k = k + 1
+			G = f(G, d(F.Clauses[1].Body))
+			k = k - 1
+			for L = 2, #F.Clauses do
+				local M = F.Clauses[L]
+				if M.Condition then
+					G = f(G, ("\t"):rep(k) .. "elseif ")
+					G = f(G, e(M.Condition))
+					G = f(G, " then") .. i
+				else
+					G = f(G, ("\t"):rep(k) .. "else") .. i
+				end
+				k = k + 1
+				G = f(G, d(M.Body))
+				k = k - 1
+			end
+			G = f(G, ("\t"):rep(k) .. "end")
+		elseif F.AstType == "WhileStatement" then
+			G = ("\t"):rep(k) .. f("while ", e(F.Condition))
+			G = f(G, " do") .. i
+			k = k + 1
+			G = f(G, d(F.Body))
+			k = k - 1
+			G = f(G, ("\t"):rep(k) .. "end")
+		elseif F.AstType == "DoStatement" then
+			G = ("\t"):rep(k) .. f(G, "do") .. i
+			k = k + 1
+			G = f(G, d(F.Body))
+			k = k - 1
+			G = f(G, ("\t"):rep(k) .. "end")
+		elseif F.AstType == "ReturnStatement" then
+			G = ("\t"):rep(k) .. "return "
+			for N = 1, #F.Arguments do
+				G = f(G, e(F.Arguments[N]))
+				if N ~= #F.Arguments then
+					G = G .. ", "
+				end
+			end
+		elseif F.AstType == "BreakStatement" then
+			G = ("\t"):rep(k) .. "break"
+		elseif F.AstType == "ContinueStatement" then
+			G = ("\t"):rep(k) .. "continue"
+		elseif F.AstType == "RepeatStatement" then
+			G = ("\t"):rep(k) .. "repeat" .. i
+			k = k + 1
+			G = f(G, d(F.Body))
+			k = k - 1
+			G = f(G, ("\t"):rep(k) .. "until ")
+			G = f(G, e(F.Condition))
+		elseif F.AstType == "Function" then
+			if F.IsLocal then
+				G = "local "
+			end
+			G = f(G, "function ")
+			G = ("\t"):rep(k) .. G
+			if F.IsLocal then
+				G = G .. F.Name.Name
+			else
+				G = G .. e(F.Name)
+			end
+			G = G .. "("
+			if #F.Arguments > 0 then
+				for O = 1, #F.Arguments do
+					G = G .. F.Arguments[O].Name
+					if O ~= #F.Arguments then
+						G = G .. ", "
+					elseif F.VarArg then
+						G = G .. ", ..."
+					end
+				end
+			elseif F.VarArg then
+				G = G .. "..."
+			end
+			G = G .. ")" .. i
+			k = k + 1
+			G = f(G, d(F.Body))
+			k = k - 1
+			G = f(G, ("\t"):rep(k) .. "end")
+		elseif F.AstType == "GenericForStatement" then
+			G = ("\t"):rep(k) .. "for "
+			for P = 1, #F.VariableList do
+				G = G .. F.VariableList[P].Name
+				if P ~= #F.VariableList then
+					G = G .. ", "
+				end
+			end
+			G = G .. " in "
+			for Q = 1, #F.Generators do
+				G = f(G, e(F.Generators[Q]))
+				if Q ~= #F.Generators then
+					G = f(G, ", ")
+				end
+			end
+			G = f(G, " do") .. i
+			k = k + 1
+			G = f(G, d(F.Body))
+			k = k - 1
+			G = f(G, ("\t"):rep(k) .. "end")
+		elseif F.AstType == "NumericForStatement" then
+			G = ("\t"):rep(k) .. "for "
+			G = G .. F.Variable.Name .. " = "
+			G = G .. e(F.Start) .. ", " .. e(F.End)
+			if F.Step then
+				G = G .. ", " .. e(F.Step)
+			end
+			G = f(G, " do") .. i
+			k = k + 1
+			G = f(G, d(F.Body))
+			k = k - 1
+			G = f(G, ("\t"):rep(k) .. "end")
+		elseif F.AstType == "LabelStatement" then
+			G = ("\t"):rep(k) .. "::" .. F.Label .. "::" .. i
+		elseif F.AstType == "GotoStatement" then
+			G = ("\t"):rep(k) .. "goto " .. F.Label .. i
+		elseif F.AstType == "Comment" then
+			if F.CommentType == "Shebang" then
+				G = ("\t"):rep(k) .. F.Data
+			elseif F.CommentType == "Comment" then
+				G = ("\t"):rep(k) .. F.Data
+			elseif F.CommentType == "LongComment" then
+				G = ("\t"):rep(k) .. F.Data
+			end
+		elseif F.AstType ~= "Eof" then
+			print("Unknown AST Type: ", F.AstType)
+		end
+		return G
+	end
+	function d(R)
+		local S = ""
+		h(R)
+		for T, U in pairs(R.Body) do
+			S = f(S, j(U) .. i)
+		end
+		return S
+	end
+	h(a)
+	return (d(a):match("^%s*(.-)%s*$"):gsub(",%.%.%.", ", ..."):gsub(", \n", ",\n"))
+end
 local function decrypt(ret)
-	local Legends = {
-		["\\"] = "\\\\",
-		["\a"] = "\\a",
-		["\b"] = "\\b",
-		["\f"] = "\\f",
-		["\n"] = "\\n",
-		["\r"] = "\\r",
-		["\t"] = "\\t",
-		["\v"] = "\\v",
-		["\""] = "\\\""
-	}
 	return (ret:gsub("0x%x+", function(a)
 		a = tostring(tonumber(a))
 		local n = a:sub(1, 1) == "-"
@@ -1974,7 +1850,7 @@ local function decrypt(ret)
 	end))
 end
 local function _beautify(scr, encrypt, renamevars)
-	local st, ast = ParseLua.ParseLua(scr)
+	local st, ast = ParseLua(scr)
 	if not st then
 		print(ast)
 		return scr
@@ -1983,11 +1859,10 @@ local function _beautify(scr, encrypt, renamevars)
 	if not encrypt then
 		ret = decrypt(ret)
 	end
-	return ret:match("^%s*(.-)%s*$")
+	return ret
 end
 local function _minify(scr, encrypt)
-	localCount = 0
-	local st, ast = ParseLua.ParseLua(scr)
+	local st, ast = ParseLua(scr)
 	if not st then
 		print(ast)
 		return scr
@@ -2011,7 +1886,7 @@ local function _minify(scr, encrypt)
 	if not encrypt then
 		ret = decrypt(ret)
 	end
-	return ret:match("^%s*(.-)%s*$")
+	return ret
 end
 return {
 	beautify = _beautify,
