@@ -4,13 +4,13 @@ local function toDictionary(t)
 	end
 	return t
 end
-local localCount = 0
 local LettersL = toDictionary({"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"})
 local LettersU = toDictionary({"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"})
 local Numbers = toDictionary({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"})
 local NumbersH = toDictionary({"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "a", "B", "b", "C", "c", "D", "d", "E", "e", "F", "f"})
 local Operators = toDictionary({"+", "-", "*", "/", "^", "%", ",", "{", "}", "[", "]", "(", ")", ";", "#"})
 local Keywords = toDictionary({"and", "break", "continue", "do", "else", "elseif", "end", "false", "for", "function", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"})
+local localCount = 0
 local getNewLocal = (function()
 	local a = {}
 	for d = ("a"):byte(), ("z"):byte() do
@@ -1463,7 +1463,7 @@ local Legends = {
 	["\v"] = "\\v",
 	["\""] = "\\\""
 }
-local function fixnum(a)
+local function fixnum(a, c)
 	a = tostring(tonumber(a))
 	local b = a:sub(1, 1) == "-"
 	if b then
@@ -1472,8 +1472,13 @@ local function fixnum(a)
 	if a:sub(1, 2) == "0." then
 		a = a:sub(2)
 	elseif a:match("%d+") == a then
-		a = tonumber(a)
-		a = a <= 9 and a or ("0x%x"):format(a)
+		if c then
+			a = tonumber(a)
+			a = a <= 9 and a or ("0x%x"):format(a)
+		else
+			local x = a:match("000+$")
+			a = x and (a:sub(1, #a - #x) .. "e" .. #x) or a
+		end
 	end
 	return b and "-" .. a or a
 end
@@ -1482,7 +1487,7 @@ local function fixstr(a)
 		return "\\" .. b:byte()
 	end)) .. "\""
 end
-local function Format(a, b, c)
+local function Format(a, b, c, LL)
 	localCount = 0
 	local k, i, d, j = 0, "\n", false, false
 	local function f(l, m, n)
@@ -1531,7 +1536,7 @@ local function Format(a, b, c)
 				s = s .. r.Name
 			end
 		elseif r.AstType == "NumberExpr" then
-			s = s .. fixnum(r.Value.Data)
+			s = s .. fixnum(r.Value.Data, LL)
 		elseif r.AstType == "StringExpr" then
 			s = s .. fixstr(r.Value.Data)
 		elseif r.AstType == "BooleanExpr" then
@@ -1830,20 +1835,7 @@ local function Format(a, b, c)
 	return (d(a):match("^%s*(.-)%s*$"):gsub(",%.%.%.", ", ..."):gsub(", \n", ",\n"))
 end
 local function decrypt(ret)
-	return (ret:gsub("0x%x+", function(a)
-		a = tostring(tonumber(a))
-		local n = a:sub(1, 1) == "-"
-		if n then
-			a = a:sub(2)
-		end
-		if a:sub(1, 2) == "0." then
-			a = a:sub(2)
-		elseif a:match("%d+") == a then
-			local x = a:match("000+$")
-			a = x and (a:sub(1, #a - #x) .. "e" .. #x) or a
-		end
-		return n and "-" .. a or a
-	end):gsub("\"[\\%d+]+\"", function(a)
+	return (ret:gsub("\"[\\%d+]+\"", function(a)
 		return "\"" .. loadstring("return " .. a)():gsub(".", function(x)
 			return Legends[x] or x
 		end) .. "\""
@@ -1855,7 +1847,7 @@ local function _beautify(scr, encrypt, renamevars)
 		print(ast)
 		return scr
 	end
-	local ret = Format(ast, not not renamevars, false)
+	local ret = Format(ast, not not renamevars, false, encrypt)
 	if not encrypt then
 		ret = decrypt(ret)
 	end
@@ -1867,7 +1859,7 @@ local function _minify(scr, encrypt)
 		print(ast)
 		return scr
 	end
-	local ret = Format(ast, true, true)
+	local ret = Format(ast, true, true, encrypt)
 	for _ = 1, 2 do
 		ret = ret:gsub("%s+", " "):gsub("([%w_]) (%p)", function(a, b)
 			if b ~= "_" then
