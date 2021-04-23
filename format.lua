@@ -1474,7 +1474,7 @@ local function fixnum(a, c)
 	elseif a:match("%d+") == a then
 		if c then
 			a = tonumber(a)
-			a = a <= 9 and a or ("0x%x"):format(a)
+			a = a <= 1 and a or ("0x%x"):format(a)
 		else
 			local x = a:match("000+$")
 			a = x and (a:sub(1, #a - #x) .. "e" .. #x) or a
