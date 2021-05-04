@@ -63,17 +63,17 @@ local Scope = {
 			Children = {}
 		}
 		if b then
-			table.insert(b.Children, c)
+			b.Children[#b.Children + 1] = c
 		end
 		return setmetatable(c, {
 			__index = a
 		})
 	end,
 	AddLocal = function(e, d)
-		table.insert(e.Locals, d)
+		e.Locals[#e.Locals + 1] = d
 	end,
 	AddGlobal = function(f, g)
-		table.insert(f.Globals, g)
+		f.Globals[#f.Globals + 1] = g
 	end,
 	CreateLocal = function(h, i)
 		local j
@@ -158,7 +158,7 @@ local Scope = {
 	GetAllVariables = function(N)
 		local O = N:getVars(true)
 		for P, Q in pairs(N:getVars(false)) do
-			table.insert(O, Q)
+			O[#O + 1] = Q
 		end
 		return O
 	end,
@@ -167,19 +167,19 @@ local Scope = {
 		if S then
 			for U, V in pairs(R.Children) do
 				for W, X in pairs(V:getVars(true)) do
-					table.insert(T, X)
+					T[#T + 1] = X
 				end
 			end
 		else
 			for Y, Z in pairs(R.Locals) do
-				table.insert(T, Z)
+				T[#T + 1] = Z
 			end
 			for ab, bb in pairs(R.Globals) do
-				table.insert(T, bb)
+				T[#T + 1] = bb
 			end
 			if R.Parent then
 				for cb, db in pairs(R.Parent:getVars(false)) do
-					table.insert(T, db)
+					T[#T + 1] = bd
 				end
 			end
 		end
@@ -367,16 +367,16 @@ local function LL(a)
 						return "<" .. (S.Type .. (" "):rep(7 - #S.Type)) .. "  " .. (S.Data or "") .. " >"
 					end
 					K = ""
-					table.insert(J, S)
+					J[#J + 1] = S
 				end
 				if R == " " or R == "\t" then
 					local T = k()
-					table.insert(J, {
+					J[#J + 1] = {
 						Type = "Whitespace",
 						Line = i,
 						Char = j,
 						Data = T
-					})
+					}
 				elseif R == "\n" or R == "\r" then
 					local U = k()
 					if K ~= "" then
@@ -390,15 +390,15 @@ local function LL(a)
 						V.Print = function()
 							return "<" .. (V.Type .. (" "):rep(7 - #V.Type)) .. "  " .. (V.Data or "") .. " >"
 						end
-						table.insert(J, V)
+						J[#J + 1] = V
 						K = ""
 					end
-					table.insert(J, {
+					J[#J + 1] = {
 						Type = "Whitespace",
 						Line = i,
 						Char = j,
 						Data = U
-					})
+					}
 				elseif R == "-" and l(1) == "-" then
 					k()
 					k()
@@ -427,7 +427,7 @@ local function LL(a)
 				Y.Print = function()
 					return "<" .. (Y.Type .. (" "):rep(7 - #Y.Type)) .. "  " .. (Y.Data or "") .. " >"
 				end
-				table.insert(J, Y)
+				J[#J + 1] = Y
 			end
 			local M = i
 			local N = j
@@ -631,7 +631,7 @@ local function LL(a)
 		local ob = b[g]
 		g = math.min(g + 1, #b)
 		if nb then
-			table.insert(nb, ob)
+			nb[#nb + 1] = ob
 		end
 		return ob
 	end
@@ -1487,7 +1487,9 @@ local function fixstr(a)
 		return "\\" .. b:byte()
 	end)) .. "\""
 end
+local LastType = false
 local function Format(a, b, c, d)
+	LastType = false
 	localCount = 0
 	local l, i, j, k = 0, "\n", false, false
 	local function f(o, m, n)
@@ -1525,6 +1527,7 @@ local function Format(a, b, c, d)
 		end
 	end
 	local function e(s)
+		LastType = s.AstType ~= "Parentheses" and s.AstType or LastType
 		if b and s.Scope then
 			h(s)
 		end
@@ -1653,12 +1656,36 @@ local function Format(a, b, c, d)
 				f = (f or s).Inner
 				G = G + 1
 			until f.AstType ~= "Parentheses"
-			t = t .. (G >= 2 and "((" or "(") .. e(f) .. (G >= 2 and "))" or ")")
+			if ({
+				["StringExpr"] = true,
+				["NumberExpr"] = true,
+				["BooleanExpr"] = true,
+				["NilExpr"] = true,
+				["MemberExpr"] = true,
+				["VarExpr"] = true,
+				["DotsExpr"] = true,
+				["IndexExpr"] = true,
+				["UnopExpr"] = true,
+				["ConstructorExpr"] = true,
+				["Function"] = true
+			})[f.AstType] and not ({
+				["MemberExpr"] = true,
+				["IndexExpr"] = true,
+				["CallStatement"] = true,
+				["CallExpr"] = true,
+				["TableCallExpr"] = true,
+				["StringCallExpr"] = true
+			})[LastType] then
+				t = t .. e(f)
+			else
+				t = t .. "(" .. e(f) .. ")"
+			end
 		end
 		t = t .. (")"):rep(s.ParenCount or 0)
 		return t
 	end
 	function k(H)
+		LastType = H.AstType ~= "Parentheses" and H.AstType or LastType
 		if b and H.Scope then
 			h(H)
 		end
@@ -1842,7 +1869,7 @@ local function Format(a, b, c, d)
 end
 local function decrypt(ret)
 	return (ret:gsub("\"[\\%d+]+\"", function(a)
-		return "\"" .. loadstring("return " .. a)():gsub(".", function(x)
+		return "\"" .. loadstring("return " .. a)():gsub("[\\\a\b\n\f\r\t\v\"]", function(x)
 			return Legends[x] or x
 		end) .. "\""
 	end))
