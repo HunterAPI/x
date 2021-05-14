@@ -1488,178 +1488,177 @@ local function fixstr(a)
 	end)) .. "\""
 end
 local LastType = false
-local function Format(a, b, c, d, ugly)
+local function Format(a, b, c, d, e)
 	LastType = false
 	localCount = 0
-	local l, i, j, k = 0, "\n", false, false
-	local function f(o, m, n)
+	local j, k, l, i = 0, "\n", false, false
+	local function f(p, o, n)
 		n = n or ""
-		local q, p = o:sub(-1, -1), m:sub(1, 1)
+		local q, r = p:sub(-1, -1), o:sub(1, 1)
 		if LettersU[q] or LettersL[q] or q == "_" then
-			if not (LettersU[p] or LettersL[p] or p == "_" or Numbers[p]) then
-				return o .. m
-			elseif p == "(" then
-				return o .. n .. m
+			if not (LettersU[r] or LettersL[r] or r == "_" or Numbers[r]) then
+				return p .. o
+			elseif r == "(" then
+				return p .. n .. o
 			else
-				return o .. n .. m
+				return p .. n .. o
 			end
 		elseif Numbers[q] then
-			if p == "(" then
-				return o .. m
+			if r == "(" then
+				return p .. o
 			else
-				return o .. n .. m
+				return p .. n .. o
 			end
 		elseif q == "" then
-			return o .. m
+			return p .. o
 		else
-			if p == "(" then
-				return o .. n .. m
+			if r == "(" then
+				return p .. n .. o
 			else
-				return o .. m
+				return p .. o
 			end
 		end
 	end
 	local g = {}
-	local function h(r, ugly)
-		if b and not g[r] then
-			g[r] = true
-			if ugly then
-				r.Scope:ObfuscateVariables()
+	local function h(s, e)
+		if b and not g[s] then
+			g[s] = true
+			if e then
+				s.Scope:ObfuscateVariables()
 			else
-				r.Scope:BeautifyVars()
+				s.Scope:BeautifyVars()
 			end
-
 		end
 	end
-	local function e(s)
-		LastType = s.AstType ~= "Parentheses" and s.AstType or LastType
-		if b and s.Scope then
-			h(s, ugly)
+	local function m(t)
+		LastType = t.AstType ~= "Parentheses" and t.AstType or LastType
+		if b and t.Scope then
+			h(t, e)
 		end
-		local t = ("("):rep(s.ParenCount or 0)
-		if s.AstType == "VarExpr" then
-			if s.Variable then
-				t = t .. s.Variable.Name
+		local u = ("("):rep(t.ParenCount or 0)
+		if t.AstType == "VarExpr" then
+			if t.Variable then
+				u = u .. t.Variable.Name
 			else
-				t = t .. s.Name
+				u = u .. t.Name
 			end
-		elseif s.AstType == "NumberExpr" then
-			t = t .. fixnum(s.Value.Data, d)
-		elseif s.AstType == "StringExpr" then
-			t = t .. fixstr(s.Value.Data)
-		elseif s.AstType == "BooleanExpr" then
-			t = t .. tostring(s.Value)
-		elseif s.AstType == "NilExpr" then
-			t = f(t, "nil")
-		elseif s.AstType == "BinopExpr" then
-			t = f(t, e(s.Lhs)) .. " "
-			t = f(t, s.Op) .. " "
-			t = f(t, e(s.Rhs))
-		elseif s.AstType == "UnopExpr" then
-			t = f(t, s.Op) .. (#s.Op ~= 1 and " " or "")
-			t = f(t, e(s.Rhs))
-		elseif s.AstType == "DotsExpr" then
-			t = t .. "..."
-		elseif s.AstType == "CallExpr" then
-			t = t .. e(s.Base)
-			if c and #s.Arguments == 1 and (s.Arguments[1].AstType == "StringExpr" or s.Arguments[1].AstType == "ConstructorExpr") then
-				t = t .. e(s.Arguments[1])
+		elseif t.AstType == "NumberExpr" then
+			u = u .. fixnum(t.Value.Data, d)
+		elseif t.AstType == "StringExpr" then
+			u = u .. fixstr(t.Value.Data)
+		elseif t.AstType == "BooleanExpr" then
+			u = u .. tostring(t.Value)
+		elseif t.AstType == "NilExpr" then
+			u = f(u, "nil")
+		elseif t.AstType == "BinopExpr" then
+			u = f(u, m(t.Lhs)) .. " "
+			u = f(u, t.Op) .. " "
+			u = f(u, m(t.Rhs))
+		elseif t.AstType == "UnopExpr" then
+			u = f(u, t.Op) .. (#t.Op ~= 1 and " " or "")
+			u = f(u, m(t.Rhs))
+		elseif t.AstType == "DotsExpr" then
+			u = u .. "..."
+		elseif t.AstType == "CallExpr" then
+			u = u .. m(t.Base)
+			if c and #t.Arguments == 1 and (t.Arguments[1].AstType == "StringExpr" or t.Arguments[1].AstType == "ConstructorExpr") then
+				u = u .. m(t.Arguments[1])
 			else
-				t = t .. "("
-				for v, u in ipairs(s.Arguments) do
-					t = t .. e(u)
-					if v ~= #s.Arguments then
-						t = t .. ", "
+				u = u .. "("
+				for v, w in ipairs(t.Arguments) do
+					u = u .. m(w)
+					if v ~= #t.Arguments then
+						u = u .. ", "
 					end
 				end
-				t = t .. ")"
+				u = u .. ")"
 			end
-		elseif s.AstType == "TableCallExpr" then
+		elseif t.AstType == "TableCallExpr" then
 			if c then
-				t = t .. e(s.Base) .. e(s.Arguments[1])
+				u = u .. m(t.Base) .. m(t.Arguments[1])
 			else
-				t = t .. e(s.Base) .. "("
-				t = t .. e(s.Arguments[1]) .. ")"
+				u = u .. m(t.Base) .. "("
+				u = u .. m(t.Arguments[1]) .. ")"
 			end
-		elseif s.AstType == "StringCallExpr" then
+		elseif t.AstType == "StringCallExpr" then
 			if c then
-				t = t .. e(s.Base) .. fixstr(s.Arguments[1].Data)
+				u = u .. m(t.Base) .. fixstr(t.Arguments[1].Data)
 			else
-				t = t .. e(s.Base) .. "("
-				t = t .. fixstr(s.Arguments[1].Data) .. ")"
+				u = u .. m(t.Base) .. "("
+				u = u .. fixstr(t.Arguments[1].Data) .. ")"
 			end
-		elseif s.AstType == "IndexExpr" then
-			t = t .. e(s.Base) .. "[" .. e(s.Index) .. "]"
-		elseif s.AstType == "MemberExpr" then
-			t = t .. e(s.Base) .. s.Indexer .. s.Ident.Data
-		elseif s.AstType == "Function" then
-			t = t .. "function("
-			if #s.Arguments > 0 then
-				for x, w in ipairs(s.Arguments) do
-					t = t .. w.Name
-					if x ~= #s.Arguments then
-						t = t .. ", "
-					elseif s.VarArg then
-						t = t .. ", ..."
+		elseif t.AstType == "IndexExpr" then
+			u = u .. m(t.Base) .. "[" .. m(t.Index) .. "]"
+		elseif t.AstType == "MemberExpr" then
+			u = u .. m(t.Base) .. t.Indexer .. t.Ident.Data
+		elseif t.AstType == "Function" then
+			u = u .. "function("
+			if #t.Arguments > 0 then
+				for x, y in ipairs(t.Arguments) do
+					u = u .. y.Name
+					if x ~= #t.Arguments then
+						u = u .. ", "
+					elseif t.VarArg then
+						u = u .. ", ..."
 					end
 				end
-			elseif s.VarArg then
-				t = t .. "..."
+			elseif t.VarArg then
+				u = u .. "..."
 			end
-			t = t .. ")" .. i
-			l = l + 1
-			t = f(t, j(s.Body))
-			l = l - 1
-			t = f(t, ("\t"):rep(l) .. "end")
-		elseif s.AstType == "ConstructorExpr" then
-			t = t .. "{"
-			local A = (function()
-				for D, C in ipairs(s.EntryList) do
-					if C.Type == "Key" or C.Type == "KeyString" then
+			u = u .. ")" .. k
+			j = j + 1
+			u = f(u, l(t.Body))
+			j = j - 1
+			u = f(u, ("\t"):rep(j) .. "end")
+		elseif t.AstType == "ConstructorExpr" then
+			u = u .. "{"
+			local C = (function()
+				for D, E in ipairs(t.EntryList) do
+					if E.Type == "Key" or E.Type == "KeyString" then
 						return false
 					end
 				end
 				return true
 			end)()
-			local B, y, z = false, false, false
-			for F, E in ipairs(s.EntryList) do
-				B, y = E.Type == "Key" or E.Type == "KeyString", B
-				l = l + (A and 0 or 1)
-				if B or z then
-					z = B
-					if not y then
-						t = t .. "\n"
-					end
-					t = t .. ("\t"):rep(l)
-				end
-				if E.Type == "Key" then
-					t = t .. "[" .. e(E.Key) .. "] = " .. e(E.Value)
-				elseif E.Type == "Value" then
-					t = t .. e(E.Value)
-				elseif E.Type == "KeyString" then
-					t = t .. E.Key .. " = " .. e(E.Value)
-				end
-				if F ~= #s.EntryList then
-					t = t .. ","
+			local A, B, z = false, false, false
+			for F, G in ipairs(t.EntryList) do
+				A, B = G.Type == "Key" or G.Type == "KeyString", A
+				j = j + (C and 0 or 1)
+				if A or z then
+					z = A
 					if not B then
-						t = t .. " "
+						u = u .. "\n"
+					end
+					u = u .. ("\t"):rep(j)
+				end
+				if G.Type == "Key" then
+					u = u .. "[" .. m(G.Key) .. "] = " .. m(G.Value)
+				elseif G.Type == "Value" then
+					u = u .. m(G.Value)
+				elseif G.Type == "KeyString" then
+					u = u .. G.Key .. " = " .. m(G.Value)
+				end
+				if F ~= #t.EntryList then
+					u = u .. ","
+					if not A then
+						u = u .. " "
 					end
 				end
-				if B then
-					t = t .. "\n"
+				if A then
+					u = u .. "\n"
 				end
-				l = l - (A and 0 or 1)
+				j = j - (C and 0 or 1)
 			end
-			if #s.EntryList > 0 and B then
-				t = t .. ("\t"):rep(l)
+			if #t.EntryList > 0 and A then
+				u = u .. ("\t"):rep(j)
 			end
-			t = t .. "}"
-		elseif s.AstType == "Parentheses" then
-			local G = 0
+			u = u .. "}"
+		elseif t.AstType == "Parentheses" then
+			local H = 0
 			local f = false
 			repeat
-				f = (f or s).Inner
-				G = G + 1
+				f = (f or t).Inner
+				H = H + 1
 			until f.AstType ~= "Parentheses"
 			if ({
 				["StringExpr"] = true,
@@ -1681,199 +1680,199 @@ local function Format(a, b, c, d, ugly)
 				["TableCallExpr"] = true,
 				["StringCallExpr"] = true
 			})[LastType] then
-				t = t .. e(f)
+				u = u .. m(f)
 			else
-				t = t .. "(" .. e(f) .. ")"
+				u = u .. "(" .. m(f) .. ")"
 			end
 		end
-		t = t .. (")"):rep(s.ParenCount or 0)
-		return t
+		u = u .. (")"):rep(t.ParenCount or 0)
+		return u
 	end
-	function k(H)
-		LastType = H.AstType ~= "Parentheses" and H.AstType or LastType
-		if b and H.Scope then
-			h(H, ugly)
+	function i(I)
+		LastType = I.AstType ~= "Parentheses" and I.AstType or LastType
+		if b and I.Scope then
+			h(I, e)
 		end
-		local I = ""
-		if H.AstType == "AssignmentStatement" then
-			I = ("\t"):rep(l)
-			for J = 1, #H.Lhs do
-				I = I .. e(H.Lhs[J])
-				if J ~= #H.Lhs then
-					I = I .. ", "
+		local J = ""
+		if I.AstType == "AssignmentStatement" then
+			J = ("\t"):rep(j)
+			for K = 1, #I.Lhs do
+				J = J .. m(I.Lhs[K])
+				if K ~= #I.Lhs then
+					J = J .. ", "
 				end
 			end
-			if #H.Rhs > 0 then
-				I = I .. " = "
-				for K = 1, #H.Rhs do
-					I = I .. e(H.Rhs[K])
-					if K ~= #H.Rhs then
-						I = I .. ", "
+			if #I.Rhs > 0 then
+				J = J .. " = "
+				for L = 1, #I.Rhs do
+					J = J .. m(I.Rhs[L])
+					if L ~= #I.Rhs then
+						J = J .. ", "
 					end
 				end
 			end
-		elseif H.AstType == "CallStatement" then
-			I = ("\t"):rep(l) .. e(H.Expression)
-		elseif H.AstType == "LocalStatement" then
-			I = ("\t"):rep(l) .. I .. "local "
-			for L = 1, #H.LocalList do
-				I = I .. H.LocalList[L].Name
-				if L ~= #H.LocalList then
-					I = I .. ", "
+		elseif I.AstType == "CallStatement" then
+			J = ("\t"):rep(j) .. m(I.Expression)
+		elseif I.AstType == "LocalStatement" then
+			J = ("\t"):rep(j) .. J .. "local "
+			for M = 1, #I.LocalList do
+				J = J .. I.LocalList[M].Name
+				if M ~= #I.LocalList then
+					J = J .. ", "
 				end
 			end
-			if #H.InitList > 0 then
-				I = I .. " = "
-				for M = 1, #H.InitList do
-					I = I .. e(H.InitList[M])
-					if M ~= #H.InitList then
-						I = I .. ", "
+			if #I.InitList > 0 then
+				J = J .. " = "
+				for N = 1, #I.InitList do
+					J = J .. m(I.InitList[N])
+					if N ~= #I.InitList then
+						J = J .. ", "
 					end
 				end
 			end
-		elseif H.AstType == "IfStatement" then
-			I = ("\t"):rep(l) .. f("if ", e(H.Clauses[1].Condition))
-			I = f(I, " then") .. i
-			l = l + 1
-			I = f(I, j(H.Clauses[1].Body))
-			l = l - 1
-			for N = 2, #H.Clauses do
-				local O = H.Clauses[N]
-				if O.Condition then
-					I = f(I, ("\t"):rep(l) .. "elseif ")
-					I = f(I, e(O.Condition))
-					I = f(I, " then") .. i
+		elseif I.AstType == "IfStatement" then
+			J = ("\t"):rep(j) .. f("if ", m(I.Clauses[1].Condition))
+			J = f(J, " then") .. k
+			j = j + 1
+			J = f(J, l(I.Clauses[1].Body))
+			j = j - 1
+			for O = 2, #I.Clauses do
+				local P = I.Clauses[O]
+				if P.Condition then
+					J = f(J, ("\t"):rep(j) .. "elseif ")
+					J = f(J, m(P.Condition))
+					J = f(J, " then") .. k
 				else
-					I = f(I, ("\t"):rep(l) .. "else") .. i
+					J = f(J, ("\t"):rep(j) .. "else") .. k
 				end
-				l = l + 1
-				I = f(I, j(O.Body))
-				l = l - 1
+				j = j + 1
+				J = f(J, l(P.Body))
+				j = j - 1
 			end
-			I = f(I, ("\t"):rep(l) .. "end")
-		elseif H.AstType == "WhileStatement" then
-			I = ("\t"):rep(l) .. f("while ", e(H.Condition))
-			I = f(I, " do") .. i
-			l = l + 1
-			I = f(I, j(H.Body))
-			l = l - 1
-			I = f(I, ("\t"):rep(l) .. "end")
-		elseif H.AstType == "DoStatement" then
-			I = ("\t"):rep(l) .. f(I, "do") .. i
-			l = l + 1
-			I = f(I, j(H.Body))
-			l = l - 1
-			I = f(I, ("\t"):rep(l) .. "end")
-		elseif H.AstType == "ReturnStatement" then
-			I = ("\t"):rep(l) .. "return"
-			if #H.Arguments > 0 then
-				I = I .. " "
+			J = f(J, ("\t"):rep(j) .. "end")
+		elseif I.AstType == "WhileStatement" then
+			J = ("\t"):rep(j) .. f("while ", m(I.Condition))
+			J = f(J, " do") .. k
+			j = j + 1
+			J = f(J, l(I.Body))
+			j = j - 1
+			J = f(J, ("\t"):rep(j) .. "end")
+		elseif I.AstType == "DoStatement" then
+			J = ("\t"):rep(j) .. f(J, "do") .. k
+			j = j + 1
+			J = f(J, l(I.Body))
+			j = j - 1
+			J = f(J, ("\t"):rep(j) .. "end")
+		elseif I.AstType == "ReturnStatement" then
+			J = ("\t"):rep(j) .. "return"
+			if #I.Arguments > 0 then
+				J = J .. " "
 			end
-			for P = 1, #H.Arguments do
-				I = f(I, e(H.Arguments[P]))
-				if P ~= #H.Arguments then
-					I = I .. ", "
+			for Q = 1, #I.Arguments do
+				J = f(J, m(I.Arguments[Q]))
+				if Q ~= #I.Arguments then
+					J = J .. ", "
 				end
 			end
-		elseif H.AstType == "BreakStatement" then
-			I = ("\t"):rep(l) .. "break"
-		elseif H.AstType == "ContinueStatement" then
-			I = ("\t"):rep(l) .. "continue"
-		elseif H.AstType == "RepeatStatement" then
-			I = ("\t"):rep(l) .. "repeat" .. i
-			l = l + 1
-			I = f(I, j(H.Body))
-			l = l - 1
-			I = f(I, ("\t"):rep(l) .. "until ")
-			I = f(I, e(H.Condition))
-		elseif H.AstType == "Function" then
-			if H.IsLocal then
-				I = "local "
+		elseif I.AstType == "BreakStatement" then
+			J = ("\t"):rep(j) .. "break"
+		elseif I.AstType == "ContinueStatement" then
+			J = ("\t"):rep(j) .. "continue"
+		elseif I.AstType == "RepeatStatement" then
+			J = ("\t"):rep(j) .. "repeat" .. k
+			j = j + 1
+			J = f(J, l(I.Body))
+			j = j - 1
+			J = f(J, ("\t"):rep(j) .. "until ")
+			J = f(J, m(I.Condition))
+		elseif I.AstType == "Function" then
+			if I.IsLocal then
+				J = "local "
 			end
-			I = f(I, "function ")
-			I = ("\t"):rep(l) .. I
-			if H.IsLocal then
-				I = I .. H.Name.Name
+			J = f(J, "function ")
+			J = ("\t"):rep(j) .. J
+			if I.IsLocal then
+				J = J .. I.Name.Name
 			else
-				I = I .. e(H.Name)
+				J = J .. m(I.Name)
 			end
-			I = I .. "("
-			if #H.Arguments > 0 then
-				for Q = 1, #H.Arguments do
-					I = I .. H.Arguments[Q].Name
-					if Q ~= #H.Arguments then
-						I = I .. ", "
-					elseif H.VarArg then
-						I = I .. ", ..."
+			J = J .. "("
+			if #I.Arguments > 0 then
+				for R = 1, #I.Arguments do
+					J = J .. I.Arguments[R].Name
+					if R ~= #I.Arguments then
+						J = J .. ", "
+					elseif I.VarArg then
+						J = J .. ", ..."
 					end
 				end
-			elseif H.VarArg then
-				I = I .. "..."
+			elseif I.VarArg then
+				J = J .. "..."
 			end
-			I = I .. ")" .. i
-			l = l + 1
-			I = f(I, j(H.Body))
-			l = l - 1
-			I = f(I, ("\t"):rep(l) .. "end")
-		elseif H.AstType == "GenericForStatement" then
-			I = ("\t"):rep(l) .. "for "
-			for R = 1, #H.VariableList do
-				I = I .. H.VariableList[R].Name
-				if R ~= #H.VariableList then
-					I = I .. ", "
+			J = J .. ")" .. k
+			j = j + 1
+			J = f(J, l(I.Body))
+			j = j - 1
+			J = f(J, ("\t"):rep(j) .. "end")
+		elseif I.AstType == "GenericForStatement" then
+			J = ("\t"):rep(j) .. "for "
+			for S = 1, #I.VariableList do
+				J = J .. I.VariableList[S].Name
+				if S ~= #I.VariableList then
+					J = J .. ", "
 				end
 			end
-			I = I .. " in "
-			for S = 1, #H.Generators do
-				I = f(I, e(H.Generators[S]))
-				if S ~= #H.Generators then
-					I = f(I, ", ")
+			J = J .. " in "
+			for T = 1, #I.Generators do
+				J = f(J, m(I.Generators[T]))
+				if T ~= #I.Generators then
+					J = f(J, ", ")
 				end
 			end
-			I = f(I, " do") .. i
-			l = l + 1
-			I = f(I, j(H.Body))
-			l = l - 1
-			I = f(I, ("\t"):rep(l) .. "end")
-		elseif H.AstType == "NumericForStatement" then
-			I = ("\t"):rep(l) .. "for "
-			I = I .. H.Variable.Name .. " = "
-			I = I .. e(H.Start) .. ", " .. e(H.End)
-			if H.Step then
-				I = I .. ", " .. e(H.Step)
+			J = f(J, " do") .. k
+			j = j + 1
+			J = f(J, l(I.Body))
+			j = j - 1
+			J = f(J, ("\t"):rep(j) .. "end")
+		elseif I.AstType == "NumericForStatement" then
+			J = ("\t"):rep(j) .. "for "
+			J = J .. I.Variable.Name .. " = "
+			J = J .. m(I.Start) .. ", " .. m(I.End)
+			if I.Step then
+				J = J .. ", " .. m(I.Step)
 			end
-			I = f(I, " do") .. i
-			l = l + 1
-			I = f(I, j(H.Body))
-			l = l - 1
-			I = f(I, ("\t"):rep(l) .. "end")
-		elseif H.AstType == "LabelStatement" then
-			I = ("\t"):rep(l) .. "::" .. H.Label .. "::" .. i
-		elseif H.AstType == "GotoStatement" then
-			I = ("\t"):rep(l) .. "goto " .. H.Label .. i
-		elseif H.AstType == "Comment" then
-			if H.CommentType == "Shebang" then
-				I = ("\t"):rep(l) .. H.Data
-			elseif H.CommentType == "Comment" then
-				I = ("\t"):rep(l) .. H.Data
-			elseif H.CommentType == "LongComment" then
-				I = ("\t"):rep(l) .. H.Data
+			J = f(J, " do") .. k
+			j = j + 1
+			J = f(J, l(I.Body))
+			j = j - 1
+			J = f(J, ("\t"):rep(j) .. "end")
+		elseif I.AstType == "LabelStatement" then
+			J = ("\t"):rep(j) .. "::" .. I.Label .. "::" .. k
+		elseif I.AstType == "GotoStatement" then
+			J = ("\t"):rep(j) .. "goto " .. I.Label .. k
+		elseif I.AstType == "Comment" then
+			if I.CommentType == "Shebang" then
+				J = ("\t"):rep(j) .. I.Data
+			elseif I.CommentType == "Comment" then
+				J = ("\t"):rep(j) .. I.Data
+			elseif I.CommentType == "LongComment" then
+				J = ("\t"):rep(j) .. I.Data
 			end
-		elseif H.AstType ~= "Eof" then
-			print("Unknown AST Type: ", H.AstType)
+		elseif I.AstType ~= "Eof" then
+			print("Unknown AST Type: ", I.AstType)
 		end
-		return I
+		return J
 	end
-	function j(T)
-		local U = ""
-		h(T, ugly)
-		for V, W in pairs(T.Body) do
-			U = f(U, k(W) .. i)
+	function l(U)
+		local V = ""
+		h(U, e)
+		for X, W in pairs(U.Body) do
+			V = f(V, i(W) .. k)
 		end
-		return U
+		return V
 	end
-	h(a, ugly)
-	return (j(a):match("^%s*(.-)%s*$"):gsub(",%.%.%.", ", ..."):gsub(", \n", ",\n"))
+	h(a, e)
+	return (l(a):match("^%s*(.-)%s*$"):gsub(",%.%.%.", ", ..."):gsub(", \n", ",\n"))
 end
 local function decrypt(ret)
 	return (ret:gsub("\"[\\%d]+\"", function(a)
