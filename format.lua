@@ -786,7 +786,7 @@ local function ParseLua(a)
 	function l(L)
 		local M = {}
 		if c:ConsumeSymbol("(", M) then
-			local b, N = h(L)
+			local b, N = h(L, ugly)
 			if not b then
 				return false, N
 			end
@@ -847,7 +847,7 @@ local function ParseLua(a)
 				Y.Tokens = V
 				U = Y
 			elseif not T and c:ConsumeSymbol("[", V) then
-				local b, Z = h(S)
+				local b, Z = h(S, ugly)
 				if not b then
 					return false, Z
 				end
@@ -863,7 +863,7 @@ local function ParseLua(a)
 			elseif not T and c:ConsumeSymbol("(", V) then
 				local bb = {}
 				while not c:ConsumeSymbol(")", V) do
-					local b, db = h(S)
+					local b, db = h(S, ugly)
 					if not b then
 						return false, db
 					end
@@ -1488,7 +1488,7 @@ local function fixstr(a)
 	end)) .. "\""
 end
 local LastType = false
-local function Format(a, b, c, d)
+local function Format(a, b, c, d, ugly)
 	LastType = false
 	localCount = 0
 	local l, i, j, k = 0, "\n", false, false
@@ -1520,16 +1520,21 @@ local function Format(a, b, c, d)
 		end
 	end
 	local g = {}
-	local function h(r)
+	local function h(r, ugly)
 		if b and not g[r] then
 			g[r] = true
-			r.Scope:BeautifyVars()
+			if ugly then
+				r.Scope:ObfuscateVariables()
+			else
+				r.Scope:BeautifyVars()
+			end
+
 		end
 	end
 	local function e(s)
 		LastType = s.AstType ~= "Parentheses" and s.AstType or LastType
 		if b and s.Scope then
-			h(s)
+			h(s, ugly)
 		end
 		local t = ("("):rep(s.ParenCount or 0)
 		if s.AstType == "VarExpr" then
@@ -1687,7 +1692,7 @@ local function Format(a, b, c, d)
 	function k(H)
 		LastType = H.AstType ~= "Parentheses" and H.AstType or LastType
 		if b and H.Scope then
-			h(H)
+			h(H, ugly)
 		end
 		local I = ""
 		if H.AstType == "AssignmentStatement" then
@@ -1760,7 +1765,10 @@ local function Format(a, b, c, d)
 			l = l - 1
 			I = f(I, ("\t"):rep(l) .. "end")
 		elseif H.AstType == "ReturnStatement" then
-			I = ("\t"):rep(l) .. "return "
+			I = ("\t"):rep(l) .. "return"
+			if #H.Arguments > 0 then
+				I = I .. " "
+			end
 			for P = 1, #H.Arguments do
 				I = f(I, e(H.Arguments[P]))
 				if P ~= #H.Arguments then
@@ -1858,17 +1866,17 @@ local function Format(a, b, c, d)
 	end
 	function j(T)
 		local U = ""
-		h(T)
+		h(T, ugly)
 		for V, W in pairs(T.Body) do
 			U = f(U, k(W) .. i)
 		end
 		return U
 	end
-	h(a)
+	h(a, ugly)
 	return (j(a):match("^%s*(.-)%s*$"):gsub(",%.%.%.", ", ..."):gsub(", \n", ",\n"))
 end
 local function decrypt(ret)
-	return (ret:gsub("\"[\\%d+]+\"", function(a)
+	return (ret:gsub("\"[\\%d]+\"", function(a)
 		return "\"" .. loadstring("return " .. a)():gsub("[\\\a\b\n\f\r\t\v\"]", function(x)
 			return Legends[x] or x
 		end) .. "\""
@@ -1913,7 +1921,35 @@ local function _minify(scr, encrypt)
 	end
 	return ret
 end
+local function _uglify(scr, encrypt)
+	local st, ast = ParseLua(scr)
+	if not st then
+		print(ast)
+		return scr
+	end
+	local ret = Format(ast, true, true, encrypt, true)
+	for _ = 1, 2 do
+		ret = ret:gsub("%s+", " "):gsub("([%w_]) (%p)", function(a, b)
+			if b ~= "_" then
+				return a .. b
+			end
+		end):gsub("(%p) (%p)", function(a, b)
+			if a ~= "_" and b ~= "_" then
+				return a .. b
+			end
+		end):gsub("(%p) ([%w_])", function(a, b)
+			if a ~= "_" then
+				return a .. b
+			end
+		end)
+	end
+	if not encrypt then
+		ret = decrypt(ret)
+	end
+	return ret
+end
 return {
 	beautify = _beautify,
-	minify = _minify
+	minify = _minify,
+	uglify = _uglify
 }
